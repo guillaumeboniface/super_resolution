@@ -1,8 +1,9 @@
 import fire
 import tensorflow as tf
-from datasets.celebhq import *
-from utils import *
+from sr3.datasets.celebhq import *
+from sr3.utils import *
 from tqdm import tqdm
+from sr3.trainer.model import *
 
 def celebhq_to_gcs(img_folder_path, project_id, num_samples_per_record=4096):
     tfrecords_dir = "tfrecords"
@@ -32,7 +33,33 @@ def celebhq_to_gcs(img_folder_path, project_id, num_samples_per_record=4096):
                 writer.write(example.SerializeToString())
 
     bucket_name = create_bucket(project_id)
-    upload_tfrecords_to_gcs(tfrecords_dir, bucket_name)    
+    upload_tfrecords_to_gcs(tfrecords_dir, bucket_name)
+
+def model_wiring_test():
+    """
+    Convenience function to test locally that the graph builds
+    """
+    model = create_model(
+        channel_dim=16,
+        channel_ramp_multiplier=(1, 2),
+        num_resblock=1
+    )
+    model.summary()
+
+def model_size_check(use_deep_blocks=False, resample_with_conv=False):
+    """
+    Convenience function to check the number of parameters match
+    the paper estimate (550M)
+    """
+    model = create_model(
+        channel_dim=128,
+        channel_ramp_multiplier=(1, 2, 4, 8, 8),
+        num_resblock=3,
+        batch_size=256,
+        use_deep_blocks=use_deep_blocks,
+        resample_with_conv=resample_with_conv
+    )
+    model.summary()
     
 if __name__ == '__main__':
   fire.Fire()

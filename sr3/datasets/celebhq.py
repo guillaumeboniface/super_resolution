@@ -1,6 +1,8 @@
+from tensorflow._api.v2 import data
 from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
 from sr3.utils import get_tfr_files_path
 import tensorflow as tf
+import numpy as np
 
 def image_feature(value):
     """Returns a bytes_list from a string / byte."""
@@ -38,6 +40,14 @@ def parse_tfrecord_fn(example):
     image_downsampled = tf.io.decode_jpeg(example["image_downsampled"], channels=3)
     return image, image_downsampled
 
+def augment_fn(images):
+    flip = np.random.randint(10)
+    image, image_downsampled = images
+    if flip % 2:
+        image = tf.image.flip_left_right(image)
+        image_downsampled = tf.image.flip_left_right(image)
+    return image, image_downsampled
+
 def get_dataset(bucket_name, batch_size, is_training=True):
     if is_training:
         tfr_files_path = get_tfr_files_path(bucket_name)[:-2]
@@ -55,6 +65,7 @@ def get_dataset(bucket_name, batch_size, is_training=True):
     if is_training:
         dataset = dataset.shuffle(10000)
         dataset = dataset.repeat()
+        dataset = dataset.map(augment_fn, num_parallel_calls=AUTOTUNE)
 
     dataset = dataset.batch(batch_size)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)

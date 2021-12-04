@@ -16,7 +16,7 @@ def train(bucket_name, job_dir, batch_size=32, use_tpu=True):
     test_ds = get_dataset(bucket_name, batch_size, is_training=False)
 
     with strategy_scope:
-        model = create_model()
+        model = create_model(batch_size=batch_size)
         model.compile(optimizer='adam',
                 steps_per_execution=steps_per_execution,
                 loss=tf.keras.losses.MeanSquaredError(),
