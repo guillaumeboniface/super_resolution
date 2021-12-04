@@ -15,10 +15,8 @@ def int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 def downsample_image(image):
-    image = tf.image.convert_image_dtype(image, tf.float32)
     image = tf.image.resize(image, [16, 16], method='nearest')
     image = tf.image.resize(image,[128, 128], method='bicubic')
-    image = tf.image.convert_image_dtype(image, tf.uint8)
     return image
 
 def create_example(image, id):
@@ -38,6 +36,8 @@ def parse_tfrecord_fn(example):
     example = tf.io.parse_single_example(example, feature_description)
     image = tf.io.decode_jpeg(example["image"], channels=3)
     image_downsampled = tf.io.decode_jpeg(example["image_downsampled"], channels=3)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image_downsampled = tf.image.convert_image_dtype(image_downsampled, tf.float32)
     return image, image_downsampled
 
 def augment_fn(images):
