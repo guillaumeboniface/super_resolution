@@ -1,16 +1,17 @@
 import tensorflow as tf
 from sr3.trainer.components import *
+from collections.abc import Iterable
 
 def create_model(
-        img_shape=(128, 128, 3),
-        batch_size=32,
-        channel_dim=128,
-        channel_ramp_multiplier=(1, 2, 4, 8, 8),
-        attention_resolution=(8,),
-        out_channels=3,
-        num_resblock=3,
-        use_deep_blocks=True,
-        resample_with_conv=False):
+        img_shape: Iterable[int] = (128, 128, 3),
+        batch_size: int = 32,
+        channel_dim: int = 128,
+        channel_ramp_multiplier: Iterable[int] = (1, 2, 4, 8, 8),
+        attention_resolution: Iterable[int] = (8,),
+        out_channels: int = 3,
+        num_resblock: int = 3,
+        use_deep_blocks: bool = True,
+        resample_with_conv: bool = False) -> tf.keras.Model:
 
     if use_deep_blocks:
         upblock = up_deep_resblock

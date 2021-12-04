@@ -4,8 +4,9 @@ from googleapiclient.http import MediaFileUpload
 import os
 import tensorflow as tf
 from tqdm import tqdm
+from collections.abc import Iterable
 
-def list_blobs(bucket_name):
+def list_blobs(bucket_name: str) -> Iterable[str]:
     """Lists all the blobs path in the bucket."""
 
     storage_client = storage.Client()
@@ -13,10 +14,10 @@ def list_blobs(bucket_name):
 
     return list(map(lambda x: 'gs://{}/{}'.format(bucket_name, x.name), blobs))
 
-def get_tfr_files_path(bucket_name):
+def get_tfr_files_path(bucket_name: str) -> Iterable[str]:
     return list(filter(lambda x: x[-5:] == "tfrec", list_blobs(bucket_name)))
 
-def initialize_tpu():
+def initialize_tpu() -> tf.distribute.Strategy:
     resolver = tf.distribute.cluster_resolver.TPUClusterResolver()
     tf.config.experimental_connect_to_cluster(resolver)
     tf.tpu.experimental.initialize_tpu_system(resolver)
@@ -24,12 +25,12 @@ def initialize_tpu():
     strategy = tf.distribute.TPUStrategy(resolver)
     return strategy
 
-def create_bucket(project_id, bucket_prefix='celebahq128'):
+def create_bucket(project_id: str, bucket_prefix: str = 'celebahq128') -> str:
     gcs_service = build('storage', 'v1')
 
     # Generate a random bucket name to which we'll upload the file.
     import uuid
-    bucket_name = 'celebahq128' + str(uuid.uuid1())
+    bucket_name = bucket_prefix + str(uuid.uuid1())
 
     body = {
         'name': bucket_name,
@@ -41,7 +42,7 @@ def create_bucket(project_id, bucket_prefix='celebahq128'):
     print('Created bucket named {}'.format(bucket_name))
     return bucket_name
 
-def upload_tfrecords_to_gcs(source_dir, bucket_name):
+def upload_tfrecords_to_gcs(source_dir: str, bucket_name: str) -> None:
     for file_name in tqdm(filter(lambda x: x[-5:] == 'tfrec', os.listdir(source_dir))):
         media = MediaFileUpload(os.path.join(source_dir, file_name), 
                                 mimetype='text/plain',

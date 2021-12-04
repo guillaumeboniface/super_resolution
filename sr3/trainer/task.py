@@ -4,7 +4,7 @@ from sr3.datasets.celebhq import *
 from sr3.trainer.model import create_model
 from sr3.utils import *
 
-def train(bucket_name, job_dir, batch_size=32, use_tpu=True):
+def train(bucket_name: str, job_dir: str, batch_size: int = 32, use_tpu: bool = True) -> None:
     if use_tpu:
         strategy_scope = initialize_tpu().scope()
         steps_per_execution = 50

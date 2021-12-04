@@ -1,6 +1,7 @@
 import tensorflow as tf
+from collections.abc import Iterable
 
-def upsample(x, use_conv=False):
+def upsample(x: tf.Tensor, use_conv: bool = False) -> tf.Tensor:
     batch_size, height, width, channels = x.shape
     x = tf.keras.layers.UpSampling2D(interpolation='nearest')(x)
     assert(x.shape == [batch_size, height * 2, width * 2, channels])
@@ -9,7 +10,7 @@ def upsample(x, use_conv=False):
         assert(x.shape == [batch_size, height * 2, width * 2, channels])
     return x
 
-def downsample(x, use_conv=False):
+def downsample(x: tf.Tensor, use_conv: bool = False):
     batch_size, height, width, channels = x.shape
     if use_conv:
         x = tf.keras.layers.Conv2D(channels, 3, strides=2, padding='same')(x)
@@ -18,7 +19,7 @@ def downsample(x, use_conv=False):
     assert(x.shape == [batch_size, height // 2, width // 2, channels])
     return x
 
-def attention_block(x, gamma):
+def attention_block(x: tf.Tensor, gamma: tf.Tensor) -> tf.Tensor:
     """
     Implementing self-attention block, as mentioned in
     https://arxiv.org/pdf/1809.11096.pdf
@@ -34,7 +35,7 @@ def attention_block(x, gamma):
 
     return x + h
 
-def deep_resblock(x, gamma, n_out_channels=None):
+def deep_resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
     """
     Reuse the resblock definitions from https://arxiv.org/pdf/1809.11096.pdf
     Slight tweak to use ConditionalInstanceNormalization and pre-activation
@@ -60,7 +61,7 @@ def deep_resblock(x, gamma, n_out_channels=None):
 
     return track_a + track_b
 
-def resblock(x, gamma, n_out_channels=None):
+def resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
     """
     Reuse the resblock definitions from https://arxiv.org/pdf/1809.11096.pdf
     Slight tweak to use ConditionalInstanceNormalization and pre-activation
@@ -80,7 +81,7 @@ def resblock(x, gamma, n_out_channels=None):
 
     return track_a + track_b
 
-def up_deep_resblock(x, skip_x, gamma, n_out_channels=None):
+def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
     if not n_out_channels:
         n_out_channels = x.shape[-1]
 
@@ -89,7 +90,7 @@ def up_deep_resblock(x, skip_x, gamma, n_out_channels=None):
     
     return deep_resblock(x, gamma, n_out_channels=n_out_channels)
 
-def up_resblock(x, skip_x, gamma, n_out_channels=None):
+def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
     if not n_out_channels:
         n_out_channels = x.shape[-1]
 
@@ -119,7 +120,7 @@ class AttentionVectorLayer(tf.keras.layers.Layer):
             trainable=True,
         )
 
-    def call(self, x):
+    def call(self, x: tf.Tensor) -> tf.Tensor:
         return tf.tensordot(x, self.w, 1) + self.b
 
 class ConditionalInstanceNormalization(tf.keras.layers.Layer):
@@ -152,7 +153,7 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
             trainable=True,
         )
 
-    def call(self, inputs):
+    def call(self, inputs: Iterable[tf.Tensor]) -> tf.Tensor:
         x, gamma = inputs
         feature_map_means = tf.math.reduce_mean(x, axis=(1, 2), keepdims=True)
         feature_map_std_dev = tf.math.reduce_std(x, axis=(1, 2), keepdims=True)

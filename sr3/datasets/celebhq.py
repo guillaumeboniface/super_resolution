@@ -3,23 +3,24 @@ from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
 from sr3.utils import get_tfr_files_path
 import tensorflow as tf
 import numpy as np
+from collections.abc import Iterable
 
-def image_feature(value):
+def image_feature(value: str) -> tf.train.Feature:
     """Returns a bytes_list from a string / byte."""
     return tf.train.Feature(
         bytes_list=tf.train.BytesList(value=[tf.io.encode_jpeg(value).numpy()])
     )
 
-def int64_feature(value):
+def int64_feature(value: int) -> tf.train.Feature:
     """Returns an int64_list from a bool / enum / int / uint."""
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
-def downsample_image(image):
+def downsample_image(image: tf.Tensor) -> tf.Tensor:
     image = tf.image.resize(image, [16, 16], method='nearest')
     image = tf.image.resize(image,[128, 128], method='bicubic')
     return image
 
-def create_example(image, id):
+def create_example(image: tf.Tensor, id: int) -> tf.train.Example:
     feature = {
         "image": image_feature(image),
         "image_downsampled": image_feature(downsample_image(image)),
@@ -27,7 +28,7 @@ def create_example(image, id):
     }
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
-def parse_tfrecord_fn(example):
+def parse_tfrecord_fn(example: tf.train.Example) -> Iterable[tf.Tensor]:
     feature_description = {
         "image": tf.io.FixedLenFeature([], tf.string),
         "image_downsampled": tf.io.FixedLenFeature([], tf.string),
@@ -40,7 +41,7 @@ def parse_tfrecord_fn(example):
     image_downsampled = tf.image.convert_image_dtype(image_downsampled, tf.float32)
     return image, image_downsampled
 
-def augment_fn(images):
+def augment_fn(images: Iterable[tf.Tensor]) -> Iterable[tf.Tensor]:
     flip = np.random.randint(10)
     image, image_downsampled = images
     if flip % 2:
@@ -48,7 +49,7 @@ def augment_fn(images):
         image_downsampled = tf.image.flip_left_right(image)
     return image, image_downsampled
 
-def get_dataset(bucket_name, batch_size, is_training=True):
+def get_dataset(bucket_name: str, batch_size: int, is_training: bool = True) -> tf.data.Dataset:
     if is_training:
         tfr_files_path = get_tfr_files_path(bucket_name)[:-2]
     else:

@@ -5,7 +5,7 @@ from sr3.utils import *
 from tqdm import tqdm
 from sr3.trainer.model import *
 
-def celebhq_to_gcs(img_folder_path, project_id, num_samples_per_record=4096):
+def celebhq_to_gcs(img_folder_path: str, project_id: str, num_samples_per_record: int = 4096) -> None:
     tfrecords_dir = "tfrecords"
     image_list = list(filter(lambda x: x[-4:] == '.jpg', os.listdir(img_folder_path)))
     samples = list(map(lambda x: {"id": int(x.split('.')[0]), "path": os.path.join(img_folder_path, x)}, image_list))
@@ -35,7 +35,7 @@ def celebhq_to_gcs(img_folder_path, project_id, num_samples_per_record=4096):
     bucket_name = create_bucket(project_id)
     upload_tfrecords_to_gcs(tfrecords_dir, bucket_name)
 
-def model_wiring_test():
+def model_wiring_test() -> None:
     """
     Convenience function to test locally that the graph builds
     """
@@ -46,7 +46,7 @@ def model_wiring_test():
     )
     model.summary()
 
-def model_size_check(use_deep_blocks=False, resample_with_conv=False):
+def model_size_check(use_deep_blocks: bool = False, resample_with_conv: bool = False) -> None:
     """
     Convenience function to check the number of parameters match
     the paper estimate (550M)
