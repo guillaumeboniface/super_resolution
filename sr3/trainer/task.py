@@ -24,7 +24,7 @@ def train(bucket_name: str, job_dir: str, batch_size: int = 32, use_tpu: bool = 
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(job_dir, 'model', 'model_file'),
-        save_weights_only=True,
+        save_weights_only=False,
         monitor='val_mean_squared_error',
         mode='max',
         save_best_only=True)

@@ -20,3 +20,10 @@ gcloud ai-platform jobs submit training $JOB_NAME \
 ```
 python3 -m sr3.trainer.task $BUCKET_NAME $JOB_DIR --use_tpu=False
 ```
+
+# Running the notebooks
+Running the notebooks requires installing locally the package
+```
+python3 -m build
+pip3 install dist/sr3-0.1-py3-none-any.whl
+```
