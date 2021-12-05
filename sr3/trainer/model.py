@@ -52,6 +52,8 @@ def create_model(
         if i != 0:
             x = upsample(x, use_conv=resample_with_conv)
 
+    assert(len(skip_connections) == 0)
+
     x = ConditionalInstanceNormalization()([x, gamma])
     x = tf.keras.activations.swish(x)
     outputs = tf.keras.layers.Conv2D(out_channels, 3, padding='same')(x)

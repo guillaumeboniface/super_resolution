@@ -6,6 +6,21 @@ import tensorflow as tf
 from tqdm import tqdm
 from collections.abc import Iterable
 
+def warmup_adam_optimizer(learning_rate: float, warmup_steps: int = 1e4) -> tf.keras.optimizers.Optimizer:
+    return tf.keras.optimizers.Adam(
+        lr=WarmUpSchedule(learning_rate, warmup_steps),
+    )
+
+class WarmUpSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+
+    def __init__(self, target_learning_rate: float, warmup_steps: int) -> None:
+        self.target_learning_rate = target_learning_rate
+        self.warmup_steps = tf.cast(warmup_steps, tf.float32)
+
+    def __call__(self, step: int) -> tf.float32:
+        warmup = tf.cast(step, tf.float32) / self.warmup_steps * self.target_learning_rate
+        return tf.math.minimum(self.target_learning_rate, warmup)
+
 def list_blobs(bucket_name: str) -> Iterable[str]:
     """Lists all the blobs path in the bucket."""
 

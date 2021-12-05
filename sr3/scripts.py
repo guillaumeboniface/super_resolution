@@ -60,6 +60,7 @@ def model_size_check(use_deep_blocks: bool = False, resample_with_conv: bool = F
         resample_with_conv=resample_with_conv
     )
     model.summary()
+    tf.keras.utils.plot_model(model, "model_shape_info.png", show_shapes=True)
     
 if __name__ == '__main__':
   fire.Fire()

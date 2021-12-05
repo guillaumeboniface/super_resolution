@@ -1,6 +1,7 @@
 from typing import Callable
 from tensorflow._api.v2 import data
 from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
+from tensorflow.python.training.input import batch
 from sr3.utils import get_tfr_files_path
 import tensorflow as tf
 from collections.abc import Iterable
@@ -64,6 +65,7 @@ def create_target_fn(noise_alpha_schedule: tf.Tensor) -> Callable:
         alpha_sample, gamma_sample, gamma_minus_one_sample = sample_noise_schedule(noise_alpha_schedule, batch_size)
         image_t = generate_noisy_image_batch(image, gamma_sample)
         image_t_minus_one = generate_noisy_image_minus_one_batch(image, image_t, gamma_sample, gamma_minus_one_sample, alpha_sample)
+        gamma_sample = gamma_sample.reshape((batch_size, 1))
         return [[image_downsampled, image_t, gamma_sample], image_t_minus_one]
     return target_fn
 
