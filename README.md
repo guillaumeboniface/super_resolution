@@ -3,6 +3,14 @@
 pip3 install -r requirements.txt
 ```
 
+# Relying on Google cloud storage
+The scripts assume the data is stored in Google Cloud Storage (GCS) and you will want to create the
+Tensorflow Dataset from the celebhq_to_gcs script. In order to create the dataset in GCS and read it
+you will need to provide credentials to the script
+```
+export GOOGLE_APPLICATION_CREDENTIALS=[filepath_to_credentials]
+```
+
 # Creating the celebhq tfrecord dataset and uploading it to Google cloud storage
 ```
 python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [google cloud project id]
