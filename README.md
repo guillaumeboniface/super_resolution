@@ -1,9 +1,8 @@
-# Training the model
+# Reproducing the SR3 paper
+This repository focuses on partially reproducing the results of the [SR3 paper](https://iterative-refinement.github.io/).
+It focuses solely on the celebaHQ dataset and the 16x16 -> 128x128 task.
 
-## Install python dependencies to run on a local machine
-```
-pip3 install -r requirements.txt
-```
+# Training the model
 
 ## Relying on Google cloud storage
 The scripts assume the data is stored in Google Cloud Storage (GCS) and you will want to create the
@@ -14,6 +13,11 @@ export GOOGLE_APPLICATION_CREDENTIALS=[filepath_to_credentials]
 ```
 
 ## Creating the celebhq tfrecord dataset and uploading it to Google cloud storage
+Install python dependencies
+```
+pip3 install -r requirements.txt
+```
+Run the script
 ```
 python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [google cloud project id]
 ```
