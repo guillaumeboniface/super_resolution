@@ -15,6 +15,10 @@ gcloud ai-platform jobs submit training $JOB_NAME \
     -- \
     $TFR_BUCKET
 ```
+To monitor the progress through tensorboard
+```
+tensorboard --logdir=$JOBDIR/tensorboard
+```
 
 # Train locally
 ```

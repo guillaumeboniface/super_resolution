@@ -4,6 +4,7 @@ from sr3.datasets.celebhq import *
 from sr3.utils import *
 from tqdm import tqdm
 from sr3.trainer.model import *
+from sr3.trainer.task import train
 
 def celebhq_to_gcs(img_folder_path: str, project_id: str, num_samples_per_record: int = 4096) -> None:
     tfrecords_dir = "tfrecords"
@@ -48,7 +49,7 @@ def model_wiring_test() -> None:
 
 def model_size_check(use_deep_blocks: bool = False, resample_with_conv: bool = False) -> None:
     """
-    Convenience function to check the number of parameters match
+    Convenience function to check whether the number of parameters match
     the paper estimate (550M)
     """
     model = create_model(
@@ -61,6 +62,17 @@ def model_size_check(use_deep_blocks: bool = False, resample_with_conv: bool = F
     )
     model.summary()
     tf.keras.utils.plot_model(model, "model_shape_info.png", show_shapes=True)
+
+def dummy_train_run(bucket_name, job_dir) -> None:
+    train(bucket_name, job_dir,
+        train_epochs=3,
+        use_tpu=False,
+        channel_dim=16,
+        channel_ramp_multiplier=(1, 2),
+        num_resblock=1,
+        n_train_images=128,
+        n_valid_images=128
+        )
     
 if __name__ == '__main__':
   fire.Fire()

@@ -1,4 +1,6 @@
+from typing import Dict
 from google.cloud import storage
+from google.cloud.storage import bucket
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 import os
@@ -6,20 +8,27 @@ import tensorflow as tf
 from tqdm import tqdm
 from collections.abc import Iterable
 
-def warmup_adam_optimizer(learning_rate: float, warmup_steps: int = 1e4) -> tf.keras.optimizers.Optimizer:
+def warmup_adam_optimizer(learning_rate: float, warmup_steps: int = 10000) -> tf.keras.optimizers.Optimizer:
     return tf.keras.optimizers.Adam(
-        lr=WarmUpSchedule(learning_rate, warmup_steps),
+        learning_rate=WarmUpSchedule(learning_rate, warmup_steps),
     )
 
 class WarmUpSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def __init__(self, target_learning_rate: float, warmup_steps: int) -> None:
         self.target_learning_rate = target_learning_rate
-        self.warmup_steps = tf.cast(warmup_steps, tf.float32)
+        self.warmup_steps = warmup_steps
 
     def __call__(self, step: int) -> tf.float32:
-        warmup = tf.cast(step, tf.float32) / self.warmup_steps * self.target_learning_rate
+        warmup = tf.cast(step, tf.float32) / tf.cast(self.warmup_steps, tf.float32) * self.target_learning_rate
         return tf.math.minimum(self.target_learning_rate, warmup)
+
+    def get_config(self) -> dict:
+        config = {
+            'target_learning_rate': self.target_learning_rate,
+            'warmup_steps': self.warmup_steps
+        }
+        return config
 
 def list_blobs(bucket_name: str) -> Iterable[str]:
     """Lists all the blobs path in the bucket."""
@@ -75,6 +84,10 @@ def upload_tfrecords_to_gcs(source_dir: str, bucket_name: str) -> None:
             _, response = request.next_chunk()
 
     print('Upload complete')
+
+def write_string_to_gcs(file_path: str, content: str) -> None:
+    with tf.io.gfile.GFile(file_path, mode='w') as file:
+        file.write(content)
 
 class DummyContextManager(object):
 

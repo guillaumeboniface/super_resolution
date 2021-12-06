@@ -35,7 +35,11 @@ def attention_block(x: tf.Tensor, gamma: tf.Tensor) -> tf.Tensor:
 
     return x + h
 
-def deep_resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
+def deep_resblock(
+        x: tf.Tensor,
+        gamma: tf.Tensor,
+        n_out_channels: bool = None,
+        dropout: float = 0.) -> tf.Tensor:
     """
     Reuse the resblock definitions from https://arxiv.org/pdf/1809.11096.pdf
     Slight tweak to use ConditionalInstanceNormalization and pre-activation
@@ -52,6 +56,7 @@ def deep_resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -
     track_b = ConditionalInstanceNormalization()([track_b, gamma])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
+    track_b = tf.keras.layers.Dropout(dropout)(track_b)
     track_b = ConditionalInstanceNormalization()([track_b, gamma])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
@@ -61,7 +66,11 @@ def deep_resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -
 
     return track_a + track_b
 
-def resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
+def resblock(
+        x: tf.Tensor,
+        gamma: tf.Tensor,
+        n_out_channels: bool = None,
+        dropout: float = 0.) -> tf.Tensor:
     """
     Reuse the resblock definitions from https://arxiv.org/pdf/1809.11096.pdf
     Slight tweak to use ConditionalInstanceNormalization and pre-activation
@@ -75,29 +84,32 @@ def resblock(x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.
     track_b = ConditionalInstanceNormalization()([x, gamma])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
+    track_b = tf.keras.layers.Dropout(dropout)(track_b)
     track_b = ConditionalInstanceNormalization()([track_b, gamma])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
 
     return track_a + track_b
 
-def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
+def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None,
+        dropout: float = 0.) -> tf.Tensor:
     if not n_out_channels:
         n_out_channels = x.shape[-1]
 
     skip_x = skip_x * 1 / tf.math.sqrt(2.)
     x = tf.keras.layers.Concatenate(axis=-1)([x, skip_x])
     
-    return deep_resblock(x, gamma, n_out_channels=n_out_channels)
+    return deep_resblock(x, gamma, n_out_channels=n_out_channels, dropout=dropout)
 
-def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None) -> tf.Tensor:
+def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None,
+        dropout: float = 0.) -> tf.Tensor:
     if not n_out_channels:
         n_out_channels = x.shape[-1]
 
     skip_x = skip_x * 1 / tf.math.sqrt(2.)
     x = tf.keras.layers.Concatenate(axis=-1)([x, skip_x])
     
-    return resblock(x, gamma, n_out_channels=n_out_channels)
+    return resblock(x, gamma, n_out_channels=n_out_channels, dropout=dropout)
 
 class AttentionVectorLayer(tf.keras.layers.Layer):
     """
@@ -113,11 +125,13 @@ class AttentionVectorLayer(tf.keras.layers.Layer):
             shape=(self.n_channels, self.n_channels),
             initializer=tf.keras.initializers.VarianceScaling(scale=1., mode='fan_avg', distribution='uniform'),
             trainable=True,
+            name='attention_w'
         )
         self.b = self.add_weight(
             shape=(self.n_channels,),
             initializer='zero',
             trainable=True,
+            name='attention_b'
         )
 
     def call(self, x: tf.Tensor) -> tf.Tensor:
@@ -143,14 +157,17 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
             shape=(self.n_channels,),
             initializer=tf.keras.initializers.RandomNormal(mean=1., stddev=0.02),
             trainable=True,
+            name='conditional_w1'
         )
         self.b = self.add_weight(
-            shape=(self.n_channels,), initializer="zero", trainable=True
+            shape=(self.n_channels,), initializer="zero", trainable=True,
+            name='conditional_b'
         )
         self.w2 = self.add_weight(
             shape=(self.n_channels,),
             initializer=tf.keras.initializers.RandomNormal(mean=1., stddev=0.02),
             trainable=True,
+            name='conditional_w2'
         )
 
     def call(self, inputs: Iterable[tf.Tensor]) -> tf.Tensor:

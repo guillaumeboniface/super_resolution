@@ -7,6 +7,8 @@ import tensorflow as tf
 from collections.abc import Iterable
 from sr3.noise_utils import *
 
+IMAGE_SHAPE = (128, 128, 3)
+
 def image_feature(value: str) -> tf.train.Feature:
     """Returns a bytes_list from a string / byte."""
     return tf.train.Feature(
@@ -34,7 +36,7 @@ def create_example(image: tf.Tensor, id: int) -> tf.train.Example:
     return tf.train.Example(features=tf.train.Features(feature=feature))
 
 
-def parse_tfrecord_fn(example: tf.train.Example) -> Iterable[tf.Tensor]:
+def parse_tfrecord_fn(example: tf.train.Example) -> tf.Tensor:
     feature_description = {
         "image": tf.io.FixedLenFeature([], tf.string),
         "image_downsampled": tf.io.FixedLenFeature([], tf.string),
@@ -45,28 +47,19 @@ def parse_tfrecord_fn(example: tf.train.Example) -> Iterable[tf.Tensor]:
     image_downsampled = tf.io.decode_jpeg(example["image_downsampled"], channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
     image_downsampled = tf.image.convert_image_dtype(image_downsampled, tf.float32)
-    return image, image_downsampled
+    return tf.stack([image, image_downsampled])
 
 
-def augment_fn(images: Iterable[tf.Tensor]) -> tf.Tensor:
-    flip = tf.experimental.numpy.random.randint(10)
-    image, image_downsampled = images
-    if flip % 2:
-        image = tf.image.flip_left_right(image)
-        image_downsampled = tf.image.flip_left_right(image)
-    return tf.stack(image, image_downsampled)
-
-
-def create_target_fn(noise_alpha_schedule: tf.Tensor) -> Callable:
+def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callable:
     def target_fn(images: tf.Tensor) -> Iterable[Iterable]:
-        batch_size = images.shape[0]
-        image = images[:, 0]
-        image_downsampled = images[:, 1]
+        image = tf.reshape(images[:, 0], (batch_size,) + IMAGE_SHAPE) # reshape to provide tensor shape at graph build time
+        image_downsampled = tf.reshape(images[:, 1], (batch_size,) + IMAGE_SHAPE)
         alpha_sample, gamma_sample, gamma_minus_one_sample = sample_noise_schedule(noise_alpha_schedule, batch_size)
-        image_t = generate_noisy_image_batch(image, gamma_sample)
-        image_t_minus_one = generate_noisy_image_minus_one_batch(image, image_t, gamma_sample, gamma_minus_one_sample, alpha_sample)
-        gamma_sample = gamma_sample.reshape((batch_size, 1))
-        return [[image_downsampled, image_t, gamma_sample], image_t_minus_one]
+        image_t, noise = generate_noisy_image_batch(image, gamma_sample)
+        # gamma should be of shape (batch, 1), this is a hack to circumvent the fact that a data pipeline cannot pass
+        # a ragged shape
+        gamma_sample = tf.broadcast_to(tf.reshape(gamma_sample, (batch_size, 1, 1, 1)), (batch_size,) + IMAGE_SHAPE)
+        return (tf.stack([image_downsampled, image_t, gamma_sample]), noise)
     return target_fn
 
 
@@ -87,10 +80,9 @@ def get_dataset(bucket_name: str, batch_size: int, noise_alpha_schedule: tf.Tens
     if is_training:
         dataset = dataset.shuffle(10000)
         dataset = dataset.repeat()
-        dataset = dataset.map(augment_fn, num_parallel_calls=AUTOTUNE)
 
     dataset = dataset.batch(batch_size)
-    dataset = dataset.map(create_target_fn(noise_alpha_schedule), num_parallel_calls=AUTOTUNE)
+    dataset = dataset.map(create_target_fn(noise_alpha_schedule, batch_size), num_parallel_calls=AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     return dataset

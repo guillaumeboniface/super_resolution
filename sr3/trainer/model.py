@@ -10,7 +10,8 @@ def create_model(
         attention_resolution: Iterable[int] = (8,),
         out_channels: int = 3,
         num_resblock: int = 3,
-        use_deep_blocks: bool = True,
+        dropout: float = 0.2,
+        use_deep_blocks: bool = False,
         resample_with_conv: bool = False) -> tf.keras.Model:
 
     if use_deep_blocks:
@@ -22,9 +23,12 @@ def create_model(
 
     num_resolutions = len(channel_ramp_multiplier)
 
-    context_img = tf.keras.Input(shape=img_shape, batch_size=batch_size)
-    noisy_img = tf.keras.Input(shape=img_shape, batch_size=batch_size)
-    gamma = tf.keras.Input(shape=(1,), batch_size=batch_size)
+    squashed_input = tf.keras.Input(type_spec=tf.TensorSpec((3,) + (batch_size,) + img_shape)) # inputs had to be stacked to go through the data pipeline
+    context_img = squashed_input[0]
+    noisy_img = squashed_input[1]
+    gamma = squashed_input[2]
+    gamma = tf.reduce_mean(gamma, axis=(1, 2, 3)) # gamma had to be broadcasted to be stacked, this is the reverse
+    gamma = tf.reshape(gamma, (batch_size, 1))
     combined_images = tf.keras.layers.Concatenate(axis=-1)([noisy_img, context_img])
     
     x = combined_images
@@ -32,7 +36,7 @@ def create_model(
     skip_connections = [x]
     for i, multiplier in enumerate(channel_ramp_multiplier):
         for j in range(num_resblock):
-            x = block(x, gamma, channel_dim * multiplier)
+            x = block(x, gamma, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
                 x = attention_block(x, gamma)
             skip_connections.append(x)
@@ -40,13 +44,13 @@ def create_model(
             x = downsample(x, use_conv=resample_with_conv)
             skip_connections.append(x)
 
-    x = block(x, gamma)
+    x = block(x, gamma, dropout=dropout)
     x = attention_block(x, gamma)
-    x = block(x, gamma)
+    x = block(x, gamma, dropout=dropout)
 
     for i, multiplier in reversed(list(enumerate(channel_ramp_multiplier))):
         for j in range(num_resblock + 1):
-            x = upblock(x, skip_connections.pop(), gamma, channel_dim * multiplier)
+            x = upblock(x, skip_connections.pop(), gamma, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
                 x = attention_block(x, gamma)
         if i != 0:
@@ -58,5 +62,5 @@ def create_model(
     x = tf.keras.activations.swish(x)
     outputs = tf.keras.layers.Conv2D(out_channels, 3, padding='same')(x)
 
-    model = tf.keras.Model(inputs=[context_img, noisy_img, gamma], outputs=outputs)
+    model = tf.keras.Model(inputs=squashed_input, outputs=outputs)
     return model
