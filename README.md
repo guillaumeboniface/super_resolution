@@ -22,8 +22,13 @@ tensorboard --logdir=$JOBDIR/tensorboard
 
 # Train locally
 ```
-python3 -m sr3.trainer.task $BUCKET_NAME $JOB_DIR --use_tpu=False
+python3 -m sr3.trainer.task $TFR_BUCKET $JOB_DIR --use_tpu=False
 ```
+
+# Run training locally on a dummy model
+```
+python3 -m sr3.scripts dummy_train_run $TFR_BUCKET $JOB_DIR
+``` 
 
 # Running the notebooks
 Running the notebooks requires installing locally the package
