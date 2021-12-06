@@ -71,7 +71,8 @@ def dummy_train_run(bucket_name, job_dir) -> None:
         channel_ramp_multiplier=(1, 2),
         num_resblock=1,
         n_train_images=128,
-        n_valid_images=128
+        n_valid_images=128,
+        batch_size=32
         )
     
 if __name__ == '__main__':

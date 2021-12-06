@@ -4,7 +4,7 @@ from collections.abc import Iterable
 
 def create_model(
         img_shape: Iterable = (128, 128, 3),
-        batch_size: int = 32,
+        batch_size: int = 256,
         channel_dim: int = 128,
         channel_ramp_multiplier: Iterable = (1, 2, 4, 8, 8),
         attention_resolution: Iterable = (8,),
