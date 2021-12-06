@@ -17,7 +17,7 @@ gcloud ai-platform jobs submit training $JOB_NAME \
 ```
 To monitor the progress through tensorboard
 ```
-tensorboard --logdir=$JOBDIR/tensorboard
+tensorboard --logdir=$JOB_DIR/tensorboard
 ```
 
 # Train locally

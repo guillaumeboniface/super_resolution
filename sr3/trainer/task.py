@@ -10,10 +10,10 @@ from sr3.noise_utils import *
 def train(
     bucket_name: str,
     job_dir: str,
-    batch_size: int = 32,
+    batch_size: int = 256,
     n_train_images: int = 4096 * 6,
     n_valid_images: int = 4096 + 1328,
-    train_epochs: int = 5,
+    train_epochs: int = 10000,
     learning_rate: float = 1e-4,
     learning_warmup_steps: int = 10000,
     dropout: float = 0.2,
