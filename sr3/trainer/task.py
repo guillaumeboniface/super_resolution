@@ -11,9 +11,9 @@ def train(
     bucket_name: str,
     job_dir: str,
     batch_size: int = 256,
-    n_train_images: int = 4096 * 6,
+    n_train_images: int = 4096 * 6 * 10,
     n_valid_images: int = 4096 + 1328,
-    train_epochs: int = 10000,
+    train_epochs: int = 1000,
     learning_rate: float = 1e-4,
     learning_warmup_steps: int = 10000,
     dropout: float = 0.2,
@@ -33,7 +33,7 @@ def train(
 
     if use_tpu:
         strategy_scope = initialize_tpu().scope()
-        steps_per_execution = 50
+        steps_per_execution = None
     else:
         strategy_scope = DummyContextManager()
         steps_per_execution = None
@@ -66,9 +66,9 @@ def train(
         save_best_only=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
         log_dir=os.path.join(job_dir, 'tensorboard'),
-        update_freq='epoch',
+        update_freq=120,
         write_steps_per_second=True,
-        histogram_freq=100)
+        histogram_freq=120)
     
     steps_per_epoch = n_train_images // batch_size
     validation_steps = n_valid_images // batch_size
