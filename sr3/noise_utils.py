@@ -54,7 +54,7 @@ def generate_noisy_image(image: tf.Tensor, std_param: tf.float32) -> tf.Tensor:
 def generate_noisy_image_batch(image: tf.Tensor, std_param: tf.float32) -> Iterable:
     std_param = tf.reshape(std_param, [std_param.shape[0], 1, 1, 1])
     noise = tf.random.normal(image.shape, stddev=1.)
-    return tf.math.sqrt(std_param) * image + tf.math.sqrt(1 - std_param) * tf.random.normal(image.shape, stddev=1.), noise
+    return tf.math.sqrt(std_param) * image + tf.math.sqrt(1 - std_param) * noise, noise
 
 def generate_noisy_image_minus_one_batch(
     image: tf.Tensor,
