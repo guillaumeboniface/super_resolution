@@ -26,9 +26,9 @@ def create_model(
     squashed_input = tf.keras.Input(shape=(3,) + img_shape, batch_size=batch_size) # inputs had to be stacked to go through the data pipeline
     context_img = tf.gather(squashed_input, 0, axis=1)
     noisy_img = tf.gather(squashed_input, 1, axis=1)
-    gamma = tf.gather(squashed_input, 1, axis=2)
+    gamma = tf.gather(squashed_input, 2, axis=1)
     gamma = tf.reduce_mean(gamma, axis=(1, 2, 3)) # gamma had to be broadcasted to be stacked, this is the reverse
-    gamma = tf.reshape(gamma, (batch_size, 1))
+    gamma = tf.expand_dims(gamma, 1)
     combined_images = tf.keras.layers.Concatenate(axis=-1)([noisy_img, context_img])
     
     x = combined_images
