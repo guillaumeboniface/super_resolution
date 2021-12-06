@@ -61,7 +61,7 @@ def model_size_check(use_deep_blocks: bool = False, resample_with_conv: bool = F
         resample_with_conv=resample_with_conv
     )
     model.summary()
-    tf.keras.utils.plot_model(model, "model_shape_info.png", show_shapes=True)
+    #tf.keras.utils.plot_model(model, "model_shape_info.png", show_shapes=True)
 
 def dummy_train_run(bucket_name, job_dir) -> None:
     train(bucket_name, job_dir,
@@ -72,7 +72,7 @@ def dummy_train_run(bucket_name, job_dir) -> None:
         num_resblock=1,
         n_train_images=128,
         n_valid_images=128,
-        batch_size=32
+        batch_size=16
         )
     
 if __name__ == '__main__':
