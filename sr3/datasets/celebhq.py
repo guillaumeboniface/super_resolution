@@ -51,7 +51,7 @@ def parse_tfrecord_fn(example: tf.train.Example) -> tf.Tensor:
 
 
 def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callable:
-    def target_fn(images: tf.Tensor) -> Iterable[Iterable]:
+    def target_fn(images: tf.Tensor) -> Iterable:
         image = tf.reshape(images[:, 0], (batch_size,) + IMAGE_SHAPE) # reshape to provide tensor shape at graph build time
         image_downsampled = tf.reshape(images[:, 1], (batch_size,) + IMAGE_SHAPE)
         alpha_sample, gamma_sample, gamma_minus_one_sample = sample_noise_schedule(noise_alpha_schedule, batch_size)

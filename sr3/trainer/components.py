@@ -170,7 +170,7 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
             name='conditional_w2'
         )
 
-    def call(self, inputs: Iterable[tf.Tensor]) -> tf.Tensor:
+    def call(self, inputs: Iterable) -> tf.Tensor:
         x, gamma = inputs
         feature_map_means = tf.math.reduce_mean(x, axis=(1, 2), keepdims=True)
         feature_map_std_dev = tf.math.reduce_std(x, axis=(1, 2), keepdims=True)

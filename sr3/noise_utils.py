@@ -1,7 +1,7 @@
 import tensorflow as tf
 from collections.abc import Iterable
 
-def sample_noise_schedule(alpha_schedule: tf.Tensor, batch_size: int) -> Iterable[tf.Tensor]:
+def sample_noise_schedule(alpha_schedule: tf.Tensor, batch_size: int) -> Iterable:
     n_timesteps = len(alpha_schedule)
     t = tf.experimental.numpy.random.randint(1, high=n_timesteps, size=batch_size)
     random_interval = tf.random.uniform((batch_size,), dtype=tf.float64)
@@ -51,7 +51,7 @@ def noise_schedule(schedule_name: str, start: float, end: float, n_timesteps: in
 def generate_noisy_image(image: tf.Tensor, std_param: tf.float32) -> tf.Tensor:
     return tf.math.sqrt(std_param) * image + tf.math.sqrt(1 - std_param) * tf.random.normal(image.shape, stddev=1.)
 
-def generate_noisy_image_batch(image: tf.Tensor, std_param: tf.float32) -> Iterable[tf.Tensor]:
+def generate_noisy_image_batch(image: tf.Tensor, std_param: tf.float32) -> Iterable:
     std_param = tf.reshape(std_param, [std_param.shape[0], 1, 1, 1])
     noise = tf.random.normal(image.shape, stddev=1.)
     return tf.math.sqrt(std_param) * image + tf.math.sqrt(1 - std_param) * tf.random.normal(image.shape, stddev=1.), noise

@@ -1,3 +1,8 @@
+# Install python dependencies to run on a local machine
+```
+pip3 install -r requirements.txt
+```
+
 # Creating the celebhq tfrecord dataset and uploading it to Google cloud storage
 ```
 python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [google cloud project id]
@@ -35,4 +40,8 @@ Running the notebooks requires installing locally the package
 ```
 python3 -m build
 pip3 install dist/sr3-0.1-py3-none-any.whl
+```
+If you're using an environment, you'll want to make it available in your notebook
+```
+python3 -m ipykernel install --user --name=super_resolution
 ```

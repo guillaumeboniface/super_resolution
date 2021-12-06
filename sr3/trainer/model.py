@@ -3,11 +3,11 @@ from sr3.trainer.components import *
 from collections.abc import Iterable
 
 def create_model(
-        img_shape: Iterable[int] = (128, 128, 3),
+        img_shape: Iterable = (128, 128, 3),
         batch_size: int = 32,
         channel_dim: int = 128,
-        channel_ramp_multiplier: Iterable[int] = (1, 2, 4, 8, 8),
-        attention_resolution: Iterable[int] = (8,),
+        channel_ramp_multiplier: Iterable = (1, 2, 4, 8, 8),
+        attention_resolution: Iterable = (8,),
         out_channels: int = 3,
         num_resblock: int = 3,
         dropout: float = 0.2,

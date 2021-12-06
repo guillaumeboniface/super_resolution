@@ -30,7 +30,7 @@ class WarmUpSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         }
         return config
 
-def list_blobs(bucket_name: str) -> Iterable[str]:
+def list_blobs(bucket_name: str) -> Iterable:
     """Lists all the blobs path in the bucket."""
 
     storage_client = storage.Client()
@@ -38,7 +38,7 @@ def list_blobs(bucket_name: str) -> Iterable[str]:
 
     return list(map(lambda x: 'gs://{}/{}'.format(bucket_name, x.name), blobs))
 
-def get_tfr_files_path(bucket_name: str) -> Iterable[str]:
+def get_tfr_files_path(bucket_name: str) -> Iterable:
     return list(filter(lambda x: x[-5:] == "tfrec", list_blobs(bucket_name)))
 
 def initialize_tpu() -> tf.distribute.Strategy:
