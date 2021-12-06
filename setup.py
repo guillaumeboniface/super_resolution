@@ -11,5 +11,5 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     include_package_data=True,
-    description='Reimplementing the SR3 paper (partially).'
+    description='Reimplementing the super resolution paper (partially).'
 )
