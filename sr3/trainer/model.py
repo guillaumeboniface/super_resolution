@@ -3,8 +3,8 @@ from sr3.trainer.components import *
 from collections.abc import Iterable
 
 def create_model(
-        img_shape: Iterable = (128, 128, 3),
-        batch_size: int = 256,
+        img_shape: Iterable,
+        batch_size: int,
         channel_dim: int = 128,
         channel_ramp_multiplier: Iterable = (1, 2, 4, 8, 8),
         attention_resolution: Iterable = (8,),
@@ -23,10 +23,10 @@ def create_model(
 
     num_resolutions = len(channel_ramp_multiplier)
 
-    squashed_input = tf.keras.Input(type_spec=tf.TensorSpec((3,) + (batch_size,) + img_shape)) # inputs had to be stacked to go through the data pipeline
-    context_img = squashed_input[0]
-    noisy_img = squashed_input[1]
-    gamma = squashed_input[2]
+    squashed_input = tf.keras.Input(shape=(3,) + img_shape, batch_size=batch_size) # inputs had to be stacked to go through the data pipeline
+    context_img = tf.gather(squashed_input, 0, axis=1)
+    noisy_img = tf.gather(squashed_input, 1, axis=1)
+    gamma = tf.gather(squashed_input, 1, axis=2)
     gamma = tf.reduce_mean(gamma, axis=(1, 2, 3)) # gamma had to be broadcasted to be stacked, this is the reverse
     gamma = tf.reshape(gamma, (batch_size, 1))
     combined_images = tf.keras.layers.Concatenate(axis=-1)([noisy_img, context_img])

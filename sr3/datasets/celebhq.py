@@ -59,7 +59,7 @@ def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callab
         # gamma should be of shape (batch, 1), this is a hack to circumvent the fact that a data pipeline cannot pass
         # a ragged shape
         gamma_sample = tf.broadcast_to(tf.reshape(gamma_sample, (batch_size, 1, 1, 1)), (batch_size,) + IMAGE_SHAPE)
-        return (tf.stack([image_downsampled, image_t, gamma_sample]), noise)
+        return (tf.stack([image_downsampled, image_t, gamma_sample], axis=1), noise)
     return target_fn
 
 

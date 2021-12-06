@@ -47,6 +47,7 @@ def train(
     with strategy_scope:
         model = create_model(
             batch_size=batch_size,
+            img_shape=IMAGE_SHAPE,
             dropout=dropout,
             channel_dim=channel_dim,
             channel_ramp_multiplier=channel_ramp_multiplier,
