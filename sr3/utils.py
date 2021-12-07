@@ -106,7 +106,7 @@ def get_model_config(model_path: str) -> dict:
         return config
 
 def fix_resume_config(resumed_config: dict, current_config: dict) -> dict:
-    for attribute in ['train_epochs', 'n_train_images', 'n_valid_images', 'resume_model']:
+    for attribute in ['train_epochs', 'n_train_images', 'n_valid_images', 'resume_model', 'tpu_steps_per_execution']:
         resumed_config['previous_' + attribute] = resumed_config.get(attribute)
         resumed_config[attribute] = current_config.get(attribute)
     return resumed_config
