@@ -27,13 +27,13 @@ python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [google cloud 
 ```
 
 ## Running a training job on Google AI platform
-In order to do this, you'll need to have a google cloud project created, as well as some kind of billing setup. You'll need also to [install the gcloud SDK](https://cloud.google.com/sdk/docs/install) and configure it to your project.
+In order to do this, you'll need to have a google cloud project created, as well as some kind of billing setup. You'll need also to [install the gcloud SDK](https://cloud.google.com/sdk/docs/install) and configure it to your project. For more info on the parameters for this command, refer to the [google cloud documentation](https://cloud.google.com/ai-platform/training/docs/training-jobs). TFR_BUCKET is a google storage path and is the folder where the training job will save the models, the job config and tensorboard data.
 ```
 gcloud ai-platform jobs submit training $JOB_NAME \
     --staging-bucket=$STAGING_BUCKET \
     --job-dir=$JOB_DIR  \
-    --package-path=$PACKAGE_PATH \
-    --module-name=$MODULE_NAME \
+    --package-path=./sr3 \
+    --module-name=sr3.trainer.task \
     --region=$REGION \
     --config=config.yaml \
     -- \
