@@ -66,3 +66,9 @@ If you want to train locally, you can do so. The data still needs to be read fro
 ```
 python3 -m sr3.trainer.task $TFR_BUCKET $JOB_DIR --use_tpu=False
 ```
+
+## Inference
+You can perform inference from the command line.
+```
+python3 -m sr3.evaluation.infer $MODEL_PATH $IMG_SRC $IMG_DEST
+```

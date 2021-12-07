@@ -183,8 +183,8 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
         feature_map_std_dev = tf.math.reduce_std(x, axis=(1, 2), keepdims=True)
         m = tf.math.reduce_mean(feature_map_means, axis=-1, keepdims=True)
         v = tf.math.reduce_std(feature_map_std_dev, axis=-1, keepdims=True)
-        weighted_feature_map_means = tf.reshape(feature_map_means, (self.batch_size, self.n_channels)) * self.w1 * gamma
-        weighted_feature_map_means = tf.reshape(weighted_feature_map_means, (self.batch_size, 1, 1, self.n_channels))
+        weighted_feature_map_means = tf.squeeze(feature_map_means, axis=(1, 2)) * self.w1 * gamma
+        weighted_feature_map_means = tf.expand_dims(tf.expand_dims(weighted_feature_map_means, 1), 1)
         x = (x - weighted_feature_map_means) / feature_map_std_dev + self.b + self.w2 * (feature_map_means - m) / v
         return x
 

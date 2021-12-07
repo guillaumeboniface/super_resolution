@@ -74,6 +74,14 @@ def dummy_train_run(bucket_name, job_dir) -> None:
         n_valid_images=128,
         batch_size=16
         )
+
+def downscale_img(src: str, dest: str, factor: int) -> None:
+    image = tf.io.decode_jpeg(tf.io.read_file(src))
+    h, w, c = image.shape
+    image = tf.image.resize(image, (h // factor, w // factor))
+    image = tf.cast(image, tf.uint8)
+    tf.io.write_file(dest, tf.io.encode_jpeg(image))
+    return
     
 if __name__ == '__main__':
   fire.Fire()
