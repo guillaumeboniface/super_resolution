@@ -1,4 +1,4 @@
-# Reproducing the SR3 paper
+# Reproducing the Image Super-Resolution via Iterative Refinement paper
 This repository focuses on partially reproducing the results of the [Image Super-Resolution via Iterate Refinement paper](https://iterative-refinement.github.io/). It focuses solely on the celebaHQ dataset and the 16x16 -> 128x128 task.
 
 The repository is based on the model and methodology description from the paper. In some places though, details are lacking and guesses had to be made. What you can expect:
