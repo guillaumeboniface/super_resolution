@@ -3,12 +3,4 @@ requires = [
     "setuptools>=42",
     "wheel"
 ]
-author = Guillaume Boniface-Chang
-author_email = guillaume.boniface@gmail.com
-description = Reimplementing the super resolution paper (partially).
-long_description = file: README.md
-long_description_content_type = text/markdown
 build-backend = "setuptools.build_meta"
-classifiers =
-    Programming Language :: Python :: 3
-    License :: OSI Approved :: MIT License
