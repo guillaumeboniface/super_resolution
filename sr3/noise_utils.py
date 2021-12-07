@@ -15,11 +15,7 @@ def sample_noise_schedule(alpha_schedule: tf.Tensor, batch_size: int) -> Iterabl
     end_interval = tf.gather(gamma_schedule, t - 1)
     gamma = start_interval + random_interval * (end_interval - start_interval)
 
-    start_interval = tf.gather(gamma_schedule, t - 1)
-    end_interval = tf.gather(gamma_schedule, tf.math.maximum(t - 2, tf.zeros((batch_size,), dtype=tf.int64)))
-    gamma_minus_one = start_interval + random_interval * (end_interval - start_interval)
-
-    return tf.cast(alpha, tf.float32), tf.cast(gamma, tf.float32), tf.cast(gamma_minus_one, tf.float32)
+    return tf.cast(alpha, tf.float32), tf.cast(gamma, tf.float32)
 
 def _warmup_alpha(start: float, end: float, n_timesteps: int, warmup_fraction: float) -> tf.Tensor:
     alphas = end * tf.ones(n_timesteps, dtype=tf.float64)

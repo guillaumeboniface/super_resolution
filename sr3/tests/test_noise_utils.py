@@ -10,7 +10,7 @@ class TestNoiseScheduleSample(unittest.TestCase):
     
     def test_sampler(self) -> None:
         schedule = tf.convert_to_tensor(list(range(5)), dtype=tf.float64)
-        alpha_sample, gamma_sample, gamma_minus_one_sample = sample_noise_schedule(schedule, 3)
+        alpha_sample, gamma_sample = sample_noise_schedule(schedule, 3)
         self.assertEqual(alpha_sample.shape, (3,))
         self.assertAlmostEqual(tf.reduce_sum(alpha_sample - tf.convert_to_tensor([0.4434243, 0.00790431, 3.4255726])).numpy(), 0)
 
@@ -21,7 +21,7 @@ class TestBatchNoiseImageGeneration(unittest.TestCase):
         batch_size = 10
         images = tf.ones((batch_size, 128, 128, 3))
         schedule = tf.convert_to_tensor(list(range(5)), dtype=tf.float64)
-        alpha_sample, gamma_sample, gamma_minus_one_sample = sample_noise_schedule(schedule, batch_size)
+        alpha_sample, gamma_sample = sample_noise_schedule(schedule, batch_size)
         noisy_images, noise = generate_noisy_image_batch(images, alpha_sample)
         self.assertEqual(images.shape, noisy_images.shape)
 

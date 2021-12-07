@@ -54,7 +54,7 @@ def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callab
     def target_fn(images: tf.Tensor) -> Iterable:
         image = tf.reshape(images[:, 0], (batch_size,) + IMAGE_SHAPE) # reshape to provide tensor shape at graph build time
         image_downsampled = tf.reshape(images[:, 1], (batch_size,) + IMAGE_SHAPE)
-        alpha_sample, gamma_sample, gamma_minus_one_sample = sample_noise_schedule(noise_alpha_schedule, batch_size)
+        alpha_sample, gamma_sample = sample_noise_schedule(noise_alpha_schedule, batch_size)
         image_t, noise = generate_noisy_image_batch(image, gamma_sample)
         # gamma should be of shape (batch, 1), this is a hack to circumvent the fact that a data pipeline cannot pass
         # a ragged shape
