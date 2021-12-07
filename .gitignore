@@ -1,4 +1,4 @@
-**/*.sh
+train_config.sh
 **/__pycache__
 **/*.pyc
 **/.ipynb_checkpoints
