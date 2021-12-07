@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 import json
 from sr3.datasets.celebhq import *
+from sr3.trainer.components import AttentionVectorLayer, ConditionalInstanceNormalization
 from sr3.trainer.model import create_model
 from sr3.utils import *
 from sr3.noise_utils import *
@@ -27,13 +28,15 @@ def train(
     num_resblock: int = 3,
     use_deep_blocks: bool = False,
     resample_with_conv: bool = False,
-    use_tpu: bool = True) -> None:
+    use_tpu: bool = True,
+    tpu_steps_per_execution: int = None,
+    resume_model: str = None) -> None:
 
     saved_args = locals()
 
     if use_tpu:
         strategy_scope = initialize_tpu().scope()
-        steps_per_execution = None
+        steps_per_execution = tpu_steps_per_execution
     else:
         strategy_scope = DummyContextManager()
         steps_per_execution = None
@@ -41,23 +44,33 @@ def train(
     noise_alpha_schedule = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
     train_ds = get_dataset(bucket_name, batch_size, noise_alpha_schedule, is_training=True)
     test_ds = get_dataset(bucket_name, batch_size, noise_alpha_schedule, is_training=False)
-
-    write_string_to_gcs(os.path.join(job_dir, 'run_config.json'), json.dumps(saved_args, indent=4))
+    
 
     with strategy_scope:
-        model = create_model(
-            batch_size=batch_size,
-            img_shape=IMAGE_SHAPE,
-            dropout=dropout,
-            channel_dim=channel_dim,
-            channel_ramp_multiplier=channel_ramp_multiplier,
-            attention_resolution=attention_resolution,
-            num_resblock=num_resblock,
-            use_deep_blocks=use_deep_blocks,
-            resample_with_conv=resample_with_conv)
-        model.compile(optimizer=warmup_adam_optimizer(learning_rate, learning_warmup_steps),
-                steps_per_execution=steps_per_execution,
-                loss=tf.keras.losses.MeanSquaredError())
+        if resume_model:
+            model = tf.keras.models.load_model(resume_model, custom_objects={
+                'WarmUpSchedule': WarmUpSchedule,
+                'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
+                'AttentionVectorLayer': AttentionVectorLayer
+            })
+            config = get_model_config(resume_model)
+            config = fix_resume_config(config, saved_args)
+            write_string_to_gcs(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
+        else:
+            model = create_model(
+                batch_size=batch_size,
+                img_shape=IMAGE_SHAPE,
+                dropout=dropout,
+                channel_dim=channel_dim,
+                channel_ramp_multiplier=channel_ramp_multiplier,
+                attention_resolution=attention_resolution,
+                num_resblock=num_resblock,
+                use_deep_blocks=use_deep_blocks,
+                resample_with_conv=resample_with_conv)
+            model.compile(optimizer=warmup_adam_optimizer(learning_rate, learning_warmup_steps),
+                    steps_per_execution=steps_per_execution,
+                    loss=tf.keras.losses.MeanSquaredError())
+            write_string_to_gcs(os.path.join(job_dir, 'run_config.json'), json.dumps(saved_args, indent=4))
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(job_dir, 'models', 'model.{epoch:04d}-{val_loss:.2f}'),

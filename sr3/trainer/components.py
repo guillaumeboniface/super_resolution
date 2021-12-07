@@ -116,8 +116,8 @@ class AttentionVectorLayer(tf.keras.layers.Layer):
     Building the query, key or value for self-attention
     from the feature map
     """
-    def __init__(self):
-        super(AttentionVectorLayer, self).__init__()
+    def __init__(self, **kwargs):
+        super(AttentionVectorLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.n_channels = input_shape[-1]
@@ -137,6 +137,13 @@ class AttentionVectorLayer(tf.keras.layers.Layer):
     def call(self, x: tf.Tensor) -> tf.Tensor:
         return tf.tensordot(x, self.w, 1) + self.b
 
+    def get_config(self) -> dict:
+        return {}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 class ConditionalInstanceNormalization(tf.keras.layers.Layer):
     """
     The goal of conditional instance normalization is to make the
@@ -145,8 +152,8 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
     implementation was informed by the appendix in
     https://arxiv.org/pdf/1907.05600.pdf
     """
-    def __init__(self):
-        super(ConditionalInstanceNormalization, self).__init__()
+    def __init__(self, **kwargs):
+        super(ConditionalInstanceNormalization, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.batch_size = input_shape[0][0]
@@ -180,3 +187,10 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
         weighted_feature_map_means = tf.reshape(weighted_feature_map_means, (self.batch_size, 1, 1, self.n_channels))
         x = (x - weighted_feature_map_means) / feature_map_std_dev + self.b + self.w2 * (feature_map_means - m) / v
         return x
+
+    def get_config(self) -> dict:
+        return {}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
