@@ -27,8 +27,7 @@ python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [google cloud 
 ```
 
 ## Running a training job on Google AI platform
-In order to do this, you'll need to have a google cloud project created, as well as
-(obviously) some kind of billing setup.
+In order to do this, you'll need to have a google cloud project created, as well as some kind of billing setup. You'll need also to [install the gcloud SDK](https://cloud.google.com/sdk/docs/install) and configure it to your project.
 ```
 gcloud ai-platform jobs submit training $JOB_NAME \
     --staging-bucket=$STAGING_BUCKET \
@@ -42,7 +41,7 @@ gcloud ai-platform jobs submit training $JOB_NAME \
 ```
 
 ## Resuming a training job
-You can resume a previous training job by passing the pass to the model saved thus
+You can resume a previous training job by passing the path to the model folder
 ```
 gcloud ai-platform jobs submit training $JOB_NAME \
     --staging-bucket=$STAGING_BUCKET \
@@ -57,13 +56,13 @@ gcloud ai-platform jobs submit training $JOB_NAME \
 ```
 
 ## Tracking your training job performance
-To monitor the progress through tensorboard
+To monitor the progress of a training run through tensorboard
 ```
 tensorboard --logdir=$JOB_DIR/tensorboard
 ```
 
 ## Train locally
-This could be useful if you have a powerful machine. I don't.
+If you want to train locally, you can do so. The data still needs to be read from GCS and the results will be stored there.
 ```
 python3 -m sr3.trainer.task $TFR_BUCKET $JOB_DIR --use_tpu=False
 ```
