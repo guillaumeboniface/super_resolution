@@ -6,7 +6,7 @@ The repository is based on the model and methodology description from the paper.
 - The residual block composition is taken from [bigGAN p17](https://arxiv.org/pdf/1809.11096.pdf).
 - The conditional instance normalization is taken from [Generative Modeling by Estimating Gradients of the Data Distribution](https://arxiv.org/pdf/1907.05600.pdf). One key difference is that we condition the normalization on Gamma which is a scalar (as opposed to a class, as in the paper conditional instance normalization comes from), obviating the need for an embedding. We used the scalar itself as a direct input to the conditional normalization layer.
 - The default hyperparameters are based on the paper description: 256 batch size, 1M steps training, adam optimizer, 1e-4 learning rate with 50000 warmup steps, 0.2 dropout, 3 resnet blocks per unet layer, 128 channel dim, {1, 2, 4, 8, 8} depth multipliers. Despite all of this, the total number of parameters for our model is 480M, against 550M in the paper. Slight differences in the model architecture are likely accounting for the difference.
-- The noise schedule is where the paper provides the least details, although he stresses the importance of it for the quality of the result. We implemented quadratic, linear, constant and warmup schedules. For training, we use a quadratic schedule, with a starting value for alpha of 1, an end value of 0.993 and 2000 timesteps.
+- The noise schedule is where the paper provides the least details, although it stresses its importance for the quality of the result. We implemented quadratic, linear, constant and warmup schedules. For training, we use a quadratic schedule, with a starting value for alpha of 1, an end value of 0.993 and 2000 timesteps.
 
 # Training the model
 
