@@ -46,8 +46,8 @@ You can resume a previous training job by passing the path to the model folder
 gcloud ai-platform jobs submit training $JOB_NAME \
     --staging-bucket=$STAGING_BUCKET \
     --job-dir=$JOB_DIR  \
-    --package-path=$PACKAGE_PATH \
-    --module-name=$MODULE_NAME \
+    --package-path=./sr3 \
+    --module-name=sr3.trainer.task \
     --region=$REGION \
     --config=config.yaml \
     -- \
