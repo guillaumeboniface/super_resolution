@@ -9,7 +9,7 @@ from sr3.utils import *
 from sr3.noise_utils import *
 
 def train(
-    bucket_name: str,
+    tfr_folder: str,
     job_dir: str,
     batch_size: int = 256,
     n_train_images: int = 4096 * 6 * 10,
@@ -42,8 +42,8 @@ def train(
         steps_per_execution = None
 
     noise_alpha_schedule = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
-    train_ds = get_dataset(bucket_name, batch_size, noise_alpha_schedule, is_training=True)
-    test_ds = get_dataset(bucket_name, batch_size, noise_alpha_schedule, is_training=False)
+    train_ds = get_dataset(tfr_folder, batch_size, noise_alpha_schedule, is_training=True)
+    test_ds = get_dataset(tfr_folder, batch_size, noise_alpha_schedule, is_training=False)
     
 
     with strategy_scope:
@@ -55,7 +55,6 @@ def train(
             })
             config = get_model_config(resume_model)
             config = fix_resume_config(config, saved_args)
-            write_string_to_gcs(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
         else:
             model = create_model(
                 batch_size=batch_size,
@@ -67,7 +66,8 @@ def train(
                 num_resblock=num_resblock,
                 use_deep_blocks=use_deep_blocks,
                 resample_with_conv=resample_with_conv)
-            write_string_to_gcs(os.path.join(job_dir, 'run_config.json'), json.dumps(saved_args, indent=4))
+            config = saved_args
+        write_string_to_file(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
         model.compile(optimizer=warmup_adam_optimizer(learning_rate, learning_warmup_steps),
             steps_per_execution=steps_per_execution,
             loss=tf.keras.losses.MeanSquaredError())

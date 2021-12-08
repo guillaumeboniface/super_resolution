@@ -44,8 +44,8 @@ def list_blobs(bucket_name: str) -> Iterable:
 
     return list(map(lambda x: 'gs://{}/{}'.format(bucket_name, x.name), blobs))
 
-def get_tfr_files_path(bucket_name: str) -> Iterable:
-    return list(filter(lambda x: x[-5:] == "tfrec", list_blobs(bucket_name)))
+def get_tfr_files_path(folder_path: str) -> Iterable:
+    return tf.io.gfile.glob(os.path.join(folder_path, '*.tfrec'))
 
 def initialize_tpu() -> tf.distribute.Strategy:
     resolver = tf.distribute.cluster_resolver.TPUClusterResolver()
@@ -54,44 +54,9 @@ def initialize_tpu() -> tf.distribute.Strategy:
     print("All devices: ", tf.config.list_logical_devices('TPU'))
     strategy = tf.distribute.TPUStrategy(resolver)
     return strategy
+    
 
-def create_bucket(project_id: str, bucket_prefix: str = 'celebahq128') -> str:
-    gcs_service = build('storage', 'v1')
-
-    # Generate a random bucket name to which we'll upload the file.
-    import uuid
-    bucket_name = bucket_prefix + str(uuid.uuid1())
-
-    body = {
-        'name': bucket_name,
-        # For a full list of locations, see:
-        # https://cloud.google.com/storage/docs/bucket-locations
-        'location': 'eu',
-    }
-    gcs_service.buckets().insert(project=project_id, body=body).execute()
-    print('Created bucket named {}'.format(bucket_name))
-    return bucket_name
-
-def upload_tfrecords_to_gcs(source_dir: str, bucket_name: str) -> None:
-    for file_name in tqdm(filter(lambda x: x[-5:] == 'tfrec', os.listdir(source_dir))):
-        media = MediaFileUpload(os.path.join(source_dir, file_name), 
-                                mimetype='text/plain',
-                                resumable=True)
-
-        gcs_service = build('storage', 'v1')
-        request = gcs_service.objects().insert(bucket=bucket_name, 
-                                            name=os.path.join('tfrecords', file_name),
-                                            media_body=media)
-
-        response = None
-        while response is None:
-            # _ is a placeholder for a progress object that we ignore.
-            # (Our file is small, so we skip reporting progress.)
-            _, response = request.next_chunk()
-
-    print('Upload complete')
-
-def write_string_to_gcs(file_path: str, content: str) -> None:
+def write_string_to_file(file_path: str, content: str) -> None:
     with tf.io.gfile.GFile(file_path, mode='w') as file:
         file.write(content)
 

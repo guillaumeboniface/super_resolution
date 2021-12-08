@@ -10,24 +10,18 @@ The repository is based on the model and methodology description from the paper.
 
 # Training the model
 
-## Relying on Google cloud storage
-The scripts assume the data is stored in Google Cloud Storage (GCS) and you will want to create the Tensorflow Dataset from the celebhq_to_gcs script. In order to create the dataset in GCS and read it you will need to provide credentials to the script.
-```
-export GOOGLE_APPLICATION_CREDENTIALS=[filepath_to_credentials]
-```
-
 ## Creating the celebhq tfrecord dataset and uploading it to Google cloud storage
 Install python dependencies
 ```
 pip3 install -r requirements.txt
 ```
-Run the script
+Run the script. You can point to Google Cloud Storage should you want to (required to run the training job on Google Cloud platform)
 ```
-python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [google cloud project id]
+python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [celebhq tfrec destination path]
 ```
 
 ## Running a training job on Google AI platform
-In order to do this, you'll need to have a google cloud project created, as well as some kind of billing setup. You'll need also to [install the gcloud SDK](https://cloud.google.com/sdk/docs/install) and configure it to your project. For more info on the parameters for this command, refer to the [google cloud documentation](https://cloud.google.com/ai-platform/training/docs/training-jobs). TFR_BUCKET is a google storage path and is the folder where the training job will save the models, the job config and tensorboard data.
+In order to do this, you'll need to have a google cloud project created, as well as some kind of billing setup. You'll need also to [install the gcloud SDK](https://cloud.google.com/sdk/docs/install) and configure it to your project. For more info on the parameters for this command, refer to the [google cloud documentation](https://cloud.google.com/ai-platform/training/docs/training-jobs). All the path provided should be google cloud storage path. JOB_DIR is where the model and tensorboard data will be stored, TFR_PATH the path to the folder with the .tfrec files.
 ```
 gcloud ai-platform jobs submit training $JOB_NAME \
     --staging-bucket=$STAGING_BUCKET \
@@ -37,7 +31,7 @@ gcloud ai-platform jobs submit training $JOB_NAME \
     --region=$REGION \
     --config=config.yaml \
     -- \
-    $TFR_BUCKET
+    $TFR_PATH
 ```
 
 ## Resuming a training job
@@ -51,7 +45,7 @@ gcloud ai-platform jobs submit training $JOB_NAME \
     --region=$REGION \
     --config=config.yaml \
     -- \
-    $TFR_BUCKET
+    $TFR_PATH
     --resume_model=$GS_RESUME_MODEL_PATH
 ```
 
@@ -62,9 +56,9 @@ tensorboard --logdir=$JOB_DIR/tensorboard
 ```
 
 ## Train locally
-If you want to train locally, you can do so. The data still needs to be read from GCS and the results will be stored there.
+If you want to train locally, you can do so. JOB_DIR is where the model and tensorboard data will be stored, TFR_PATH the path to the folder with the .tfrec files.
 ```
-python3 -m sr3.trainer.task $TFR_BUCKET $JOB_DIR --use_tpu=False
+python3 -m sr3.trainer.task $TFR_PATH $JOB_DIR --use_tpu=False
 ```
 
 ## Inference

@@ -21,16 +21,16 @@ def int64_feature(value: int) -> tf.train.Feature:
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-def downsample_image(image: tf.Tensor) -> tf.Tensor:
-    image = tf.image.resize(image, [16, 16], method='nearest')
-    image = tf.image.resize(image,[128, 128], method='bicubic')
-    return image
+def downsample_image(image: tf.Tensor, full_res: int, downscale_factor: int) -> tf.Tensor:
+    image = tf.image.resize(image, [full_res // downscale_factor, full_res // downscale_factor], method='nearest')
+    image = tf.image.resize(image,[full_res, full_res], method='bicubic')
+    return tf.cast(image, tf.uint8)
 
 
-def create_example(image: tf.Tensor, id: int) -> tf.train.Example:
+def create_example(image: tf.Tensor, id: int, full_res: int, downscale_factor: int) -> tf.train.Example:
     feature = {
         "image": image_feature(image),
-        "image_downsampled": image_feature(downsample_image(image)),
+        "image_downsampled": image_feature(downsample_image(image, full_res, downscale_factor)),
         "id": int64_feature(id),
     }
     return tf.train.Example(features=tf.train.Features(feature=feature))
@@ -63,11 +63,11 @@ def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callab
     return target_fn
 
 
-def get_dataset(bucket_name: str, batch_size: int, noise_alpha_schedule: tf.Tensor, is_training: bool = True) -> tf.data.Dataset:
+def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tensor, is_training: bool = True) -> tf.data.Dataset:
     if is_training:
-        tfr_files_path = get_tfr_files_path(bucket_name)[:-2]
+        tfr_files_path = get_tfr_files_path(tfr_folder)[:-2]
     else:
-        tfr_files_path = get_tfr_files_path(bucket_name)[-2:]
+        tfr_files_path = get_tfr_files_path(tfr_folder)[-2:]
     raw_dataset = tf.data.TFRecordDataset(tfr_files_path)
 
     ignore_order = tf.data.Options()
