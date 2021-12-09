@@ -17,7 +17,7 @@ def infer(model: tf.keras.models.Model, images: tf.Tensor, alpha_noise_schedule:
     for i in range(alphas.shape[0]):
         gamma_b = tf.broadcast_to(tf.reshape(gammas[i], (batch_size, 1, 1, 1)), (batch_size,) + IMAGE_SHAPE)
         input = tf.stack([context_images, target_images, gamma_b], axis=1)
-        target_images = (images - (1 - alphas[i]) / tf.math.sqrt(1 - gammas[i]) * model(input)) / tf.math.sqrt(alphas[i]) + \
+        target_images = (target_images - (1 - alphas[i]) / tf.math.sqrt(1 - gammas[i]) * model(input)) / tf.math.sqrt(alphas[i]) + \
             tf.math.sqrt(1 - alphas[i]) * tf.random.normal(images.shape, stddev=1.)
     return target_images
 
