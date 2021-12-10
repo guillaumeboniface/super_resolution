@@ -19,7 +19,7 @@ def train(
     learning_warmup_steps: int = 10000,
     dropout: float = 0.2,
     noise_schedule_shape: str = 'quad',
-    noise_schedule_start: float = 1.,
+    noise_schedule_start: float = 0.999,
     noise_schedule_end: float = 0.993,
     noise_schedule_steps: int = 2000,
     channel_dim: int = 128,

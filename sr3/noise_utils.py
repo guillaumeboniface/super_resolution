@@ -24,6 +24,7 @@ def _warmup_alpha(start: float, end: float, n_timesteps: int, warmup_fraction: f
     return alphas
 
 def noise_schedule(schedule_name: str, start: float, end: float, n_timesteps: int, gammas: bool = False) -> tf.Tensor:
+    assert(start < 1. and start > 0. and end < 1. and end > 0.)
     start = tf.cast(start, tf.float64)
     end = tf.cast(end, tf.float64)
     if schedule_name == 'quad':
