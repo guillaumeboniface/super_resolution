@@ -79,8 +79,8 @@ def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tenso
     )
     if is_training:
         dataset = dataset.shuffle(10000)
-        dataset = dataset.repeat()
-
+    
+    dataset = dataset.repeat()
     dataset = dataset.batch(batch_size)
     dataset = dataset.map(create_target_fn(noise_alpha_schedule, batch_size), num_parallel_calls=AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
