@@ -54,7 +54,7 @@ def initialize_tpu() -> tf.distribute.Strategy:
     print("All devices: ", tf.config.list_logical_devices('TPU'))
     strategy = tf.distribute.TPUStrategy(resolver)
     return strategy
-    
+
 
 def write_string_to_file(file_path: str, content: str) -> None:
     with tf.io.gfile.GFile(file_path, mode='w') as file:
@@ -71,7 +71,7 @@ def get_model_config(model_path: str) -> dict:
         return config
 
 def fix_resume_config(resumed_config: dict, current_config: dict) -> dict:
-    for attribute in ['train_epochs', 'n_train_images', 'n_valid_images', 'resume_model', 'tpu_steps_per_execution']:
+    for attribute in ['train_epochs', 'n_train_images', 'n_valid_images', 'resume_model']:
         resumed_config['previous_' + attribute] = resumed_config.get(attribute)
         resumed_config[attribute] = current_config.get(attribute)
     return resumed_config

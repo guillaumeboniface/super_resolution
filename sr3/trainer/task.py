@@ -66,11 +66,12 @@ def train(
                 num_resblock=num_resblock,
                 use_deep_blocks=use_deep_blocks,
                 resample_with_conv=resample_with_conv)
+            model.compile(optimizer=warmup_adam_optimizer(learning_rate, learning_warmup_steps),
+                steps_per_execution=steps_per_execution,
+                loss=tf.keras.losses.MeanSquaredError())
             config = saved_args
         write_string_to_file(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
-        model.compile(optimizer=warmup_adam_optimizer(learning_rate, learning_warmup_steps),
-            steps_per_execution=steps_per_execution,
-            loss=tf.keras.losses.MeanSquaredError())
+        
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(job_dir, 'models', 'model.{epoch:04d}-{val_loss:.2f}'),
