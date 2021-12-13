@@ -2,7 +2,7 @@ import fire
 import os
 import tensorflow as tf
 import json
-from sr3.datasets.celebhq import *
+from sr3.dataset import *
 from sr3.trainer.components import AttentionVectorLayer, ConditionalInstanceNormalization
 from sr3.trainer.model import create_model
 from sr3.utils import *

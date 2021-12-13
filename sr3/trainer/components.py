@@ -96,7 +96,7 @@ def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_ch
     if not n_out_channels:
         n_out_channels = x.shape[-1]
 
-    skip_x = skip_x * 1 / tf.math.sqrt(2.)
+    skip_x = skip_x * 1 / tf.math.sqrt(2.) # downscale the skip connection by 1 / sqrt(2)
     x = tf.keras.layers.Concatenate(axis=-1)([x, skip_x])
     
     return deep_resblock(x, gamma, n_out_channels=n_out_channels, dropout=dropout)
@@ -194,3 +194,23 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
     @classmethod
     def from_config(cls, config):
         return cls(**config)
+
+
+class NoiseEmbedding(tf.keras.layers.Layer):
+    def __init__(self, dim, **kwargs):
+        super(ConditionalInstanceNormalization, self).__init__(**kwargs)
+        self.dim = dim
+
+    def build(self, input_shape):
+        return
+
+    def call(self, inputs: Iterable) -> tf.Tensor:
+        return
+
+    def get_config(self) -> dict:
+        return {}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+

@@ -10,14 +10,14 @@ The repository is based on the model and methodology description from the paper.
 
 # Training the model
 
-## Creating the celebhq tfrecord dataset and uploading it to Google cloud storage
+## Creating the tfrecord dataset and uploading it to Google cloud storage
 Install python dependencies
 ```
 pip3 install -r requirements.txt
 ```
 Run the script. You can point to Google Cloud Storage should you want to (required to run the training job on Google Cloud platform)
 ```
-python3 -m sr3.scripts celebhq_to_gcs [celebhq image folder path] [celebhq tfrec destination path]
+python3 -m sr3.scripts dataset_to_gcs [image folder path] [tfrec destination path]
 ```
 
 ## Running a training job on Google AI platform

@@ -5,7 +5,7 @@ from tensorflow.python.ops.image_ops_impl import ResizeMethod
 from sr3.trainer.components import *
 from sr3.utils import WarmUpSchedule
 from sr3.noise_utils import noise_schedule
-from sr3.datasets.celebhq import *
+from sr3.dataset import *
 import fire
 
 def infer(model: tf.keras.models.Model, images: tf.Tensor, alpha_noise_schedule: Iterable) -> tf.Tensor:
