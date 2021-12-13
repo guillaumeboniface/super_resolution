@@ -12,9 +12,9 @@ def train(
     tfr_folder: str,
     job_dir: str,
     batch_size: int = 256,
-    n_train_images: int = 4096 * 6 * 10,
-    n_valid_images: int = 4096 + 1328,
+    valid_ratio: float = 0.1,
     train_epochs: int = 1000,
+    epoch_factor: int = 10,
     learning_rate: float = 1e-4,
     learning_warmup_steps: int = 10000,
     dropout: float = 0.2,
@@ -42,9 +42,10 @@ def train(
         steps_per_execution = None
 
     noise_alpha_schedule = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
-    train_ds = get_dataset(tfr_folder, batch_size, noise_alpha_schedule, is_training=True)
-    test_ds = get_dataset(tfr_folder, batch_size, noise_alpha_schedule, is_training=False)
-    
+    train_ds, n_train_images = get_dataset(tfr_folder, batch_size, noise_alpha_schedule, valid_ratio, is_training=True)
+    test_ds, n_valid_images = get_dataset(tfr_folder, batch_size, noise_alpha_schedule, valid_ratio, is_training=False)
+
+    n_train_images *= epoch_factor #lengthen each "epoch" by going over the dataset epoch_factor time
 
     with strategy_scope:
         if resume_model:

@@ -65,11 +65,18 @@ def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callab
     return target_fn
 
 
-def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tensor, is_training: bool = True) -> tf.data.Dataset:
+def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tensor, valid_ratio: float, is_training: bool = True) -> Iterable:
+    with tf.io.gfile.GFile(os.path.join(tfr_folder, "metadata.json")) as metadata_file:
+        metadata = json.loads(metadata_file)
+
+    num_training_files = metadata.get("num_samples") * (1 - valid_ratio) // metadata.get("samples_per_file")
+    
     if is_training:
-        tfr_files_path = get_tfr_files_path(tfr_folder)[:-2]
+        num_samples = num_training_files * metadata.get("samples_per_file")
+        tfr_files_path = get_tfr_files_path(tfr_folder)[:num_training_files]
     else:
-        tfr_files_path = get_tfr_files_path(tfr_folder)[-2:]
+        num_samples = metadata.get("num_samples") - num_training_files * metadata.get("samples_per_file")
+        tfr_files_path = get_tfr_files_path(tfr_folder)[num_training_files:]
     raw_dataset = tf.data.TFRecordDataset(tfr_files_path)
 
     ignore_order = tf.data.Options()
@@ -87,7 +94,7 @@ def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tenso
     dataset = dataset.map(create_target_fn(noise_alpha_schedule, batch_size), num_parallel_calls=AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
-    return dataset
+    return dataset, num_samples
 
 
 def dataset_to_gcs(
