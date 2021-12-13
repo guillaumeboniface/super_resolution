@@ -90,9 +90,22 @@ def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tenso
     return dataset
 
 
-def dataset_to_gcs(src_path: str, dest_path, num_samples_per_record: int = 4096, full_res: int = 128, downscale_factor: int = 8) -> None:
-    image_list = tf.io.gfile.glob(os.path.join(src_path, "*.jpg"))
+def dataset_to_gcs(
+        src_path: str,
+        dest_path,
+        file_format: str = "jpg",
+        num_samples_per_record: int = 4096,
+        full_res: int = 128,
+        downscale_factor: int = 8) -> None:
+    image_list = tf.io.gfile.glob(os.path.join(src_path, "*." + file_format))
     samples = list(map(lambda x: {"id": int(os.path.split(x.split(".")[0])[1]), "path": x}, image_list))
+
+    if file_format == "jpg":
+        decode = tf.io.decode_jpeg
+    elif file_format == "png":
+        decode = tf.io.decode_png
+    else:
+        raise NotImplementedError("Format not supported")
 
     num_samples = len(samples)
     num_tfrecords = num_samples // num_samples_per_record
@@ -115,7 +128,7 @@ def dataset_to_gcs(src_path: str, dest_path, num_samples_per_record: int = 4096,
             for sample in record_samples:
                 image_path = sample["path"]
                 try:
-                    image = tf.io.decode_jpeg(tf.io.read_file(image_path))
+                    image = decode(tf.io.read_file(image_path))
                 except Exception:
                     print("Couldn't package %s" % image_path)
                 example = create_example(image, sample["id"], full_res, downscale_factor)
