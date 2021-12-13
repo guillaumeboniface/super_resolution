@@ -1,11 +1,13 @@
 from typing import Callable
+import os
 from tensorflow._api.v2 import data
 from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
 from tensorflow.python.training.input import batch
-from sr3.utils import get_tfr_files_path
+from sr3.utils import *
 import tensorflow as tf
 from collections.abc import Iterable
 from sr3.noise_utils import *
+import fire
 
 IMAGE_SHAPE = (128, 128, 3)
 
@@ -86,3 +88,38 @@ def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tenso
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     return dataset
+
+
+def dataset_to_gcs(src_path: str, dest_path, num_samples_per_record: int = 4096, full_res: int = 128, downscale_factor: int = 8) -> None:
+    image_list = tf.io.gfile.glob(os.path.join(src_path, "*.jpg"))
+    samples = list(map(lambda x: {"id": int(os.path.split(x.split(".")[0])[1]), "path": x}, image_list))
+
+    num_samples = len(samples)
+    num_tfrecords = num_samples // num_samples_per_record
+    if num_samples % num_samples_per_record:
+        num_tfrecords += 1  # add one record if there are any remaining samples
+
+    dataset_metadata = {
+        "num_files": num_tfrecords,
+        "samples_per_file": num_samples_per_record,
+        "num_samples": num_samples,
+        "full_res": full_res,
+        "downscale_factor": downscale_factor
+    }
+    write_string_to_file(os.path.join(dest_path, "metadata.json"), json.dumps(dataset_metadata, indent=4))
+    for tfrec_num in tqdm(range(num_tfrecords)):
+        record_samples = samples[tfrec_num * num_samples_per_record : min((tfrec_num+1) * num_samples_per_record, num_samples)]
+        with tf.io.TFRecordWriter(
+            dest_path + "/file_%.2i-%i.tfrec" % (tfrec_num, len(record_samples))
+        ) as writer:
+            for sample in record_samples:
+                image_path = sample["path"]
+                try:
+                    image = tf.io.decode_jpeg(tf.io.read_file(image_path))
+                except Exception:
+                    print("Couldn't package %s" % image_path)
+                example = create_example(image, sample["id"], full_res, downscale_factor)
+                writer.write(example.SerializeToString())
+
+if __name__ == '__main__':
+  fire.Fire(dataset_to_gcs)

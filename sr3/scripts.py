@@ -6,37 +6,6 @@ from sr3.utils import *
 from tqdm import tqdm
 from sr3.trainer.model import *
 from sr3.trainer.task import train
-
-def dataset_to_gcs(src_path: str, dest_path, num_samples_per_record: int = 4096, full_res: int = 128, downscale_factor: int = 8) -> None:
-    image_list = tf.io.gfile.glob(os.path.join(src_path, "*.jpg"))
-    samples = list(map(lambda x: {"id": int(os.path.split(x.split(".")[0])[1]), "path": x}, image_list))
-
-    num_samples = len(samples)
-    num_tfrecords = num_samples // num_samples_per_record
-    if num_samples % num_samples_per_record:
-        num_tfrecords += 1  # add one record if there are any remaining samples
-
-    dataset_metadata = {
-        "num_files": num_tfrecords,
-        "samples_per_file": num_samples_per_record,
-        "num_samples": num_samples,
-        "full_res": full_res,
-        "downscale_factor": downscale_factor
-    }
-    write_string_to_file(os.path.join(dest_path, "metadata.json"), json.dumps(dataset_metadata, indent=4))
-    for tfrec_num in tqdm(range(num_tfrecords)):
-        record_samples = samples[tfrec_num * num_samples_per_record : min((tfrec_num+1) * num_samples_per_record, num_samples)]
-        with tf.io.TFRecordWriter(
-            dest_path + "/file_%.2i-%i.tfrec" % (tfrec_num, len(record_samples))
-        ) as writer:
-            for sample in record_samples:
-                image_path = sample["path"]
-                try:
-                    image = tf.io.decode_jpeg(tf.io.read_file(image_path))
-                except Exception:
-                    print("Couldn't package %s" % image_path)
-                example = create_example(image, sample["id"], full_res, downscale_factor)
-                writer.write(example.SerializeToString())
                  
 
 def model_wiring_test() -> None:

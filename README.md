@@ -17,7 +17,7 @@ pip3 install -r requirements.txt
 ```
 Run the script. You can point to Google Cloud Storage should you want to (required to run the training job on Google Cloud platform)
 ```
-python3 -m sr3.scripts dataset_to_gcs [image folder path] [tfrec destination path]
+python3 -m sr3.dataset [image folder path] [tfrec destination path]
 ```
 
 ## Running a training job on Google AI platform
