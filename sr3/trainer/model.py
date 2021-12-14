@@ -30,35 +30,41 @@ def create_model(
     gamma = tf.reduce_mean(gamma, axis=(1, 2, 3)) # gamma had to be broadcasted to be stacked, this is the reverse
     gamma = tf.expand_dims(gamma, 1)
     combined_images = tf.keras.layers.Concatenate(axis=-1)([noisy_img, context_img])
+
+    noise_level_embedding = NoiseEmbedding(channel_dim)(gamma)
+    noise_level_mlp = tf.keras.models.Sequential()
+    noise_level_mlp.add(tf.keras.layers.Dense(channel_dim * 4, activation="swish"))
+    noise_level_mlp.add(tf.keras.layers.Dense(channel_dim))
+    noise_level_embedding = noise_level_mlp(noise_level_embedding)
     
     x = combined_images
     x = tf.keras.layers.Conv2D(channel_dim, 3, padding='same')(x)
     skip_connections = [x]
     for i, multiplier in enumerate(channel_ramp_multiplier):
         for j in range(num_resblock):
-            x = block(x, gamma, channel_dim * multiplier, dropout=dropout)
+            x = block(x, noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = attention_block(x, gamma)
+                x = attention_block(x)
             skip_connections.append(x)
         if i != num_resolutions - 1:
             x = downsample(x, use_conv=resample_with_conv)
             skip_connections.append(x)
 
-    x = block(x, gamma, dropout=dropout)
-    x = attention_block(x, gamma)
-    x = block(x, gamma, dropout=dropout)
+    x = block(x, noise_level_embedding, dropout=dropout)
+    x = attention_block(x)
+    x = block(x, noise_level_embedding, dropout=dropout)
 
     for i, multiplier in reversed(list(enumerate(channel_ramp_multiplier))):
         for j in range(num_resblock + 1):
-            x = upblock(x, skip_connections.pop(), gamma, channel_dim * multiplier, dropout=dropout)
+            x = upblock(x, skip_connections.pop(), noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = attention_block(x, gamma)
+                x = attention_block(x)
         if i != 0:
             x = upsample(x, use_conv=resample_with_conv)
 
     assert(len(skip_connections) == 0)
 
-    x = ConditionalInstanceNormalization()([x, gamma])
+    x = ConditionalInstanceNormalization()([x, noise_level_embedding])
     x = tf.keras.activations.swish(x)
     outputs = tf.keras.layers.Conv2D(out_channels, 3, padding='same')(x)
 

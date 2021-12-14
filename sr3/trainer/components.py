@@ -19,17 +19,15 @@ def downsample(x: tf.Tensor, use_conv: bool = False):
     assert(x.shape == [batch_size, height // 2, width // 2, channels])
     return x
 
-def attention_block(x: tf.Tensor, gamma: tf.Tensor) -> tf.Tensor:
+def attention_block(x: tf.Tensor) -> tf.Tensor:
     """
     Implementing self-attention block, as mentioned in
     https://arxiv.org/pdf/1809.11096.pdf
     """
-    
-    h = ConditionalInstanceNormalization()([x, gamma])
 
-    q = AttentionVectorLayer()(h)
-    v = AttentionVectorLayer()(h)
-    k = AttentionVectorLayer()(h)
+    q = AttentionVectorLayer()(x)
+    v = AttentionVectorLayer()(x)
+    k = AttentionVectorLayer()(x)
 
     h = tf.keras.layers.Attention()([q, v, k])
 
@@ -37,7 +35,7 @@ def attention_block(x: tf.Tensor, gamma: tf.Tensor) -> tf.Tensor:
 
 def deep_resblock(
         x: tf.Tensor,
-        gamma: tf.Tensor,
+        noise_embedding: tf.Tensor,
         n_out_channels: bool = None,
         dropout: float = 0.) -> tf.Tensor:
     """
@@ -50,17 +48,17 @@ def deep_resblock(
 
     track_a = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(x)
 
-    track_b = ConditionalInstanceNormalization()([x, gamma])
+    track_b = ConditionalInstanceNormalization()([x, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(track_b)
-    track_b = ConditionalInstanceNormalization()([track_b, gamma])
+    track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
     track_b = tf.keras.layers.Dropout(dropout)(track_b)
-    track_b = ConditionalInstanceNormalization()([track_b, gamma])
+    track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
-    track_b = ConditionalInstanceNormalization()([track_b, gamma])
+    track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(track_b)
 
@@ -68,7 +66,7 @@ def deep_resblock(
 
 def resblock(
         x: tf.Tensor,
-        gamma: tf.Tensor,
+        noise_embedding: tf.Tensor,
         n_out_channels: bool = None,
         dropout: float = 0.) -> tf.Tensor:
     """
@@ -81,17 +79,17 @@ def resblock(
 
     track_a = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(x)
 
-    track_b = ConditionalInstanceNormalization()([x, gamma])
+    track_b = ConditionalInstanceNormalization()([x, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
     track_b = tf.keras.layers.Dropout(dropout)(track_b)
-    track_b = ConditionalInstanceNormalization()([track_b, gamma])
+    track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
 
     return track_a + track_b
 
-def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None,
+def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, noise_embedding: tf.Tensor, n_out_channels: bool = None,
         dropout: float = 0.) -> tf.Tensor:
     if not n_out_channels:
         n_out_channels = x.shape[-1]
@@ -99,9 +97,9 @@ def up_deep_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_ch
     skip_x = skip_x * 1 / tf.math.sqrt(2.) # downscale the skip connection by 1 / sqrt(2)
     x = tf.keras.layers.Concatenate(axis=-1)([x, skip_x])
     
-    return deep_resblock(x, gamma, n_out_channels=n_out_channels, dropout=dropout)
+    return deep_resblock(x, noise_embedding, n_out_channels=n_out_channels, dropout=dropout)
 
-def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channels: bool = None,
+def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, noise_embedding: tf.Tensor, n_out_channels: bool = None,
         dropout: float = 0.) -> tf.Tensor:
     if not n_out_channels:
         n_out_channels = x.shape[-1]
@@ -109,7 +107,7 @@ def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, gamma: tf.Tensor, n_out_channel
     skip_x = skip_x * 1 / tf.math.sqrt(2.)
     x = tf.keras.layers.Concatenate(axis=-1)([x, skip_x])
     
-    return resblock(x, gamma, n_out_channels=n_out_channels, dropout=dropout)
+    return resblock(x, noise_embedding, n_out_channels=n_out_channels, dropout=dropout)
 
 class AttentionVectorLayer(tf.keras.layers.Layer):
     """
@@ -150,7 +148,8 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
     model aware of the amount of noise to be removed (i.e how many
     steps in the noise diffusion process are being considered). The
     implementation was informed by the appendix in
-    https://arxiv.org/pdf/1907.05600.pdf
+    https://arxiv.org/pdf/1907.05600.pdf and implementation at
+    https://github.com/ermongroup/ncsn/blob/master/models/cond_refinenet_dilated.py
     """
     def __init__(self, **kwargs):
         super(ConditionalInstanceNormalization, self).__init__(**kwargs)
@@ -160,32 +159,35 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
         self.height = input_shape[0][1]
         self.width = input_shape[0][2]
         self.n_channels = input_shape[0][3]
+        self.embedding_dim = input_shape[1][1]
         self.w1 = self.add_weight(
-            shape=(self.n_channels,),
+            shape=(self.embedding_dim, self.n_channels),
             initializer=tf.keras.initializers.RandomNormal(mean=1., stddev=0.02),
             trainable=True,
             name='conditional_w1'
         )
         self.b = self.add_weight(
-            shape=(self.n_channels,), initializer="zero", trainable=True,
+            shape=(self.embedding_dim, self.n_channels), initializer="zero", trainable=True,
             name='conditional_b'
         )
         self.w2 = self.add_weight(
-            shape=(self.n_channels,),
+            shape=(self.embedding_dim, self.n_channels),
             initializer=tf.keras.initializers.RandomNormal(mean=1., stddev=0.02),
             trainable=True,
             name='conditional_w2'
         )
 
     def call(self, inputs: Iterable) -> tf.Tensor:
-        x, gamma = inputs
+        x, noise_embedding = inputs
         feature_map_means = tf.math.reduce_mean(x, axis=(1, 2), keepdims=True)
         feature_map_std_dev = tf.math.reduce_std(x, axis=(1, 2), keepdims=True)
         m = tf.math.reduce_mean(feature_map_means, axis=-1, keepdims=True)
         v = tf.math.reduce_std(feature_map_std_dev, axis=-1, keepdims=True)
-        weighted_feature_map_means = tf.squeeze(feature_map_means, axis=(1, 2)) * self.w1 * gamma
-        weighted_feature_map_means = tf.expand_dims(tf.expand_dims(weighted_feature_map_means, 1), 1)
-        x = (x - weighted_feature_map_means) / feature_map_std_dev + self.b + self.w2 * (feature_map_means - m) / v
+        gamma = tf.expand_dims(tf.expand_dims(tf.tensordot(noise_embedding, self.w1, 1), 1), 1)
+        beta = tf.expand_dims(tf.expand_dims(tf.tensordot(noise_embedding, self.b, 1), 1), 1)
+        alpha = tf.expand_dims(tf.expand_dims(tf.tensordot(noise_embedding, self.w2, 1), 1), 1)
+        instance_norm = (x - feature_map_means) / feature_map_std_dev
+        x = gamma * instance_norm + beta + alpha * (feature_map_means - m) / v
         return x
 
     def get_config(self) -> dict:
@@ -197,18 +199,28 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
 
 
 class NoiseEmbedding(tf.keras.layers.Layer):
+    """
+    Implementation of noise embedding taken from Wavegrad
+    implementation at https://github.com/lmnt-com/wavegrad/blob/master/src/wavegrad/model.py
+    """
     def __init__(self, dim, **kwargs):
-        super(ConditionalInstanceNormalization, self).__init__(**kwargs)
+        super(NoiseEmbedding, self).__init__(**kwargs)
         self.dim = dim
 
-    def build(self, input_shape):
-        return
-
-    def call(self, inputs: Iterable) -> tf.Tensor:
-        return
+    def call(self, inputs: tf.Tensor) -> tf.Tensor:
+        assert(len(inputs.shape) == 2)
+        half_dim = self.dim // 2
+        encoding = tf.range(half_dim, dtype=tf.float32) * tf.math.log(1e4) / half_dim
+        encoding = tf.math.exp(encoding * -1)
+        encoding = inputs * tf.expand_dims(encoding, 0)
+        encoding = tf.concat([tf.math.sin(encoding), tf.math.cos(encoding)], -1)
+        assert(encoding.shape == (inputs.shape[0], self.dim))
+        return encoding
 
     def get_config(self) -> dict:
-        return {}
+        return {
+            'dim': self.dim
+        }
 
     @classmethod
     def from_config(cls, config):

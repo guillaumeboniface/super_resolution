@@ -6,16 +6,18 @@ from sr3.utils import *
 from tqdm import tqdm
 from sr3.trainer.model import *
 from sr3.trainer.task import train
-                 
+
 
 def model_wiring_test() -> None:
     """
     Convenience function to test locally that the graph builds
     """
     model = create_model(
+        img_shape=(128,128,3),
         channel_dim=16,
         channel_ramp_multiplier=(1, 2),
-        num_resblock=1
+        batch_size=32,
+        num_resblock=1,
     )
     model.summary()
 
@@ -25,6 +27,7 @@ def model_size_check(use_deep_blocks: bool = False, resample_with_conv: bool = F
     the paper estimate (550M)
     """
     model = create_model(
+        img_shape=(128,128,3),
         channel_dim=128,
         channel_ramp_multiplier=(1, 2, 4, 8, 8),
         num_resblock=3,
