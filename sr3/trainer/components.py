@@ -180,9 +180,9 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
     def call(self, inputs: Iterable) -> tf.Tensor:
         x, noise_embedding = inputs
         feature_map_means = tf.math.reduce_mean(x, axis=(1, 2), keepdims=True)
-        feature_map_std_dev = tf.math.reduce_std(x, axis=(1, 2), keepdims=True)
+        feature_map_std_dev = tf.math.reduce_std(x, axis=(1, 2), keepdims=True) + 1e-5
         m = tf.math.reduce_mean(feature_map_means, axis=-1, keepdims=True)
-        v = tf.math.reduce_std(feature_map_std_dev, axis=-1, keepdims=True)
+        v = tf.math.reduce_std(feature_map_means, axis=-1, keepdims=True) + 1e-5
         gamma = tf.expand_dims(tf.expand_dims(tf.tensordot(noise_embedding, self.w1, 1), 1), 1)
         beta = tf.expand_dims(tf.expand_dims(tf.tensordot(noise_embedding, self.b, 1), 1), 1)
         alpha = tf.expand_dims(tf.expand_dims(tf.tensordot(noise_embedding, self.w2, 1), 1), 1)
