@@ -1,10 +1,7 @@
 import fire
 import os
 import tensorflow as tf
-from sr3.dataset import *
-from sr3.utils import *
-from tqdm import tqdm
-from sr3.trainer.model import *
+from sr3.trainer.model import create_model
 from sr3.trainer.task import train
 
 

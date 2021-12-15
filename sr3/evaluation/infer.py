@@ -2,10 +2,8 @@ import tensorflow as tf
 from collections.abc import Iterable
 
 from tensorflow.python.ops.image_ops_impl import ResizeMethod
-from sr3.trainer.components import *
-from sr3.utils import WarmUpSchedule
 from sr3.noise_utils import noise_schedule
-from sr3.dataset import *
+from sr3.dataset import IMAGE_SHAPE
 from sr3.trainer.model import custom_objects
 import fire
 

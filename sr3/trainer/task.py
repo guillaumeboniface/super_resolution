@@ -2,11 +2,11 @@ import fire
 import os
 import tensorflow as tf
 import json
-from sr3.dataset import *
-from sr3.trainer.components import *
-from sr3.trainer.model import *
-from sr3.utils import *
-from sr3.noise_utils import *
+from collections.abc import Iterable
+from sr3.dataset import get_dataset, IMAGE_SHAPE
+from sr3.trainer.model import create_model, custom_objects
+import sr3.utils as utils
+from sr3.noise_utils import noise_schedule
 
 def train(
     tfr_folder: str,
@@ -35,10 +35,10 @@ def train(
     saved_args = locals()
 
     if use_tpu:
-        strategy_scope = initialize_tpu().scope()
+        strategy_scope = utils.initialize_tpu().scope()
         steps_per_execution = tpu_steps_per_execution
     else:
-        strategy_scope = DummyContextManager()
+        strategy_scope = utils.DummyContextManager()
         steps_per_execution = None
 
     noise_alpha_schedule = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
@@ -50,8 +50,8 @@ def train(
     with strategy_scope:
         if resume_model:
             model = tf.keras.models.load_model(resume_model, custom_objects=custom_objects)
-            config = get_model_config(resume_model)
-            config = fix_resume_config(config, saved_args)
+            config = utils.get_model_config(resume_model)
+            config = utils.fix_resume_config(config, saved_args)
         else:
             model = create_model(
                 batch_size=batch_size,
@@ -63,11 +63,11 @@ def train(
                 num_resblock=num_resblock,
                 use_deep_blocks=use_deep_blocks,
                 resample_with_conv=resample_with_conv)
-            model.compile(optimizer=warmup_adam_optimizer(learning_rate, learning_warmup_steps),
+            model.compile(optimizer=utils.warmup_adam_optimizer(learning_rate, learning_warmup_steps),
                 steps_per_execution=steps_per_execution,
                 loss=tf.keras.losses.MeanSquaredError())
             config = saved_args
-        write_string_to_file(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
+        utils.write_string_to_file(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
         
 
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from sr3.utils import WarmUpSchedule
-from sr3.trainer.components import *
+import sr3.trainer.components as components 
 from collections.abc import Iterable
 
 def create_model(
@@ -16,11 +16,11 @@ def create_model(
         resample_with_conv: bool = False) -> tf.keras.Model:
 
     if use_deep_blocks:
-        upblock = up_deep_resblock
-        block = deep_resblock
+        upblock = components.up_deep_resblock
+        block = components.deep_resblock
     else:
-        upblock = up_resblock
-        block = resblock
+        upblock = components.up_resblock
+        block = components.resblock
 
     num_resolutions = len(channel_ramp_multiplier)
 
@@ -32,7 +32,7 @@ def create_model(
     gamma = tf.expand_dims(gamma, 1)
     combined_images = tf.keras.layers.Concatenate(axis=-1)([noisy_img, context_img])
 
-    noise_level_embedding = NoiseEmbedding(channel_dim)(gamma)
+    noise_level_embedding = components.NoiseEmbedding(channel_dim)(gamma)
     noise_level_mlp = tf.keras.models.Sequential()
     noise_level_mlp.add(tf.keras.layers.Dense(channel_dim * 4, activation="swish"))
     noise_level_mlp.add(tf.keras.layers.Dense(channel_dim))
@@ -45,27 +45,27 @@ def create_model(
         for j in range(num_resblock):
             x = block(x, noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = attention_block(x)
+                x = components.attention_block(x)
             skip_connections.append(x)
         if i != num_resolutions - 1:
-            x = downsample(x, use_conv=resample_with_conv)
+            x = components.downsample(x, use_conv=resample_with_conv)
             skip_connections.append(x)
 
     x = block(x, noise_level_embedding, dropout=dropout)
-    x = attention_block(x)
+    x = components.attention_block(x)
     x = block(x, noise_level_embedding, dropout=dropout)
 
     for i, multiplier in reversed(list(enumerate(channel_ramp_multiplier))):
         for j in range(num_resblock + 1):
             x = upblock(x, skip_connections.pop(), noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = attention_block(x)
+                x = components.attention_block(x)
         if i != 0:
-            x = upsample(x, use_conv=resample_with_conv)
+            x = components.upsample(x, use_conv=resample_with_conv)
 
     assert(len(skip_connections) == 0)
 
-    x = ConditionalInstanceNormalization()([x, noise_level_embedding])
+    x = components.ConditionalInstanceNormalization()([x, noise_level_embedding])
     x = tf.keras.activations.swish(x)
     outputs = tf.keras.layers.Conv2D(out_channels, 3, padding='same')(x)
 
@@ -74,7 +74,7 @@ def create_model(
 
 custom_objects = {
     'WarmUpSchedule': WarmUpSchedule,
-    'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
-    'AttentionVectorLayer': AttentionVectorLayer,
-    'NoiseEmbedding': NoiseEmbedding
+    'ConditionalInstanceNormalization': components.ConditionalInstanceNormalization,
+    'AttentionVectorLayer': components.AttentionVectorLayer,
+    'NoiseEmbedding': components.NoiseEmbedding
 }

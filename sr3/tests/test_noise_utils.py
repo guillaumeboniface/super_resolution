@@ -1,6 +1,6 @@
 import unittest
 import tensorflow as tf
-from sr3.noise_utils import *
+from sr3.noise_utils import sample_noise_schedule, noise_schedule, generate_noisy_image, generate_noisy_image_minus_one_batch, generate_noisy_image_batch
 
 class TestNoiseScheduleSample(unittest.TestCase):
 
