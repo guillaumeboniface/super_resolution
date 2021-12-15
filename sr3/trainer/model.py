@@ -1,4 +1,5 @@
 import tensorflow as tf
+from sr3.utils import WarmUpSchedule
 from sr3.trainer.components import *
 from collections.abc import Iterable
 
@@ -70,3 +71,10 @@ def create_model(
 
     model = tf.keras.Model(inputs=squashed_input, outputs=outputs)
     return model
+
+custom_objects = {
+    'WarmUpSchedule': WarmUpSchedule,
+    'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
+    'AttentionVectorLayer': AttentionVectorLayer,
+    'NoiseEmbedding': NoiseEmbedding
+}

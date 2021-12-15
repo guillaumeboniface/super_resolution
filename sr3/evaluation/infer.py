@@ -6,6 +6,7 @@ from sr3.trainer.components import *
 from sr3.utils import WarmUpSchedule
 from sr3.noise_utils import noise_schedule
 from sr3.dataset import *
+from sr3.trainer.model import custom_objects
 import fire
 
 def infer(model: tf.keras.models.Model, images: tf.Tensor, alpha_noise_schedule: Iterable) -> tf.Tensor:
@@ -32,12 +33,7 @@ def infer_from_file(
         noise_schedule_start: float = 1.,
         noise_schedule_end: float = 0.95,
         noise_schedule_steps: int = 100) -> None:
-    model = tf.keras.models.load_model(model_path, custom_objects={
-        'WarmUpSchedule': WarmUpSchedule,
-        'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
-        'AttentionVectorLayer': AttentionVectorLayer,
-        'NoiseEmbedding': NoiseEmbedding
-    })
+    model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
     alphas = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
     image = tf.cast(tf.io.decode_jpeg(tf.io.read_file(src)), tf.float32)
     h, w, c = image.shape

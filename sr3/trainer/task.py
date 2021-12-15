@@ -4,7 +4,7 @@ import tensorflow as tf
 import json
 from sr3.dataset import *
 from sr3.trainer.components import *
-from sr3.trainer.model import create_model
+from sr3.trainer.model import *
 from sr3.utils import *
 from sr3.noise_utils import *
 
@@ -49,12 +49,7 @@ def train(
 
     with strategy_scope:
         if resume_model:
-            model = tf.keras.models.load_model(resume_model, custom_objects={
-                'WarmUpSchedule': WarmUpSchedule,
-                'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
-                'AttentionVectorLayer': AttentionVectorLayer,
-                'NoiseEmbedding': NoiseEmbedding
-            })
+            model = tf.keras.models.load_model(resume_model, custom_objects=custom_objects)
             config = get_model_config(resume_model)
             config = fix_resume_config(config, saved_args)
         else:
