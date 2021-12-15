@@ -3,7 +3,7 @@ import os
 import tensorflow as tf
 import json
 from sr3.dataset import *
-from sr3.trainer.components import AttentionVectorLayer, ConditionalInstanceNormalization
+from sr3.trainer.components import *
 from sr3.trainer.model import create_model
 from sr3.utils import *
 from sr3.noise_utils import *
@@ -52,7 +52,8 @@ def train(
             model = tf.keras.models.load_model(resume_model, custom_objects={
                 'WarmUpSchedule': WarmUpSchedule,
                 'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
-                'AttentionVectorLayer': AttentionVectorLayer
+                'AttentionVectorLayer': AttentionVectorLayer,
+                'NoiseEmbedding': NoiseEmbedding
             })
             config = get_model_config(resume_model)
             config = fix_resume_config(config, saved_args)

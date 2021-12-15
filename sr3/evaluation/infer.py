@@ -35,7 +35,8 @@ def infer_from_file(
     model = tf.keras.models.load_model(model_path, custom_objects={
         'WarmUpSchedule': WarmUpSchedule,
         'ConditionalInstanceNormalization': ConditionalInstanceNormalization,
-        'AttentionVectorLayer': AttentionVectorLayer
+        'AttentionVectorLayer': AttentionVectorLayer,
+        'NoiseEmbedding': NoiseEmbedding
     })
     alphas = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
     image = tf.cast(tf.io.decode_jpeg(tf.io.read_file(src)), tf.float32)
