@@ -42,8 +42,7 @@ def dummy_train_run(tfr_folder, job_dir) -> None:
         channel_dim=16,
         channel_ramp_multiplier=(1, 2),
         num_resblock=1,
-        n_train_images=128,
-        n_valid_images=128,
+        epoch_factor=0.01041666666,
         batch_size=16
         )
 

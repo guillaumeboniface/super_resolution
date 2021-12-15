@@ -69,9 +69,9 @@ def create_target_fn(noise_alpha_schedule: tf.Tensor, batch_size: int) -> Callab
 
 def get_dataset(tfr_folder: str, batch_size: int, noise_alpha_schedule: tf.Tensor, valid_ratio: float, is_training: bool = True) -> Iterable:
     with tf.io.gfile.GFile(os.path.join(tfr_folder, "metadata.json")) as metadata_file:
-        metadata = json.loads(metadata_file)
+        metadata = json.loads(metadata_file.read())
 
-    num_training_files = metadata.get("num_samples") * (1 - valid_ratio) // metadata.get("samples_per_file")
+    num_training_files = int(metadata.get("num_samples") * (1 - valid_ratio)) // metadata.get("samples_per_file")
     
     if is_training:
         num_samples = num_training_files * metadata.get("samples_per_file")
