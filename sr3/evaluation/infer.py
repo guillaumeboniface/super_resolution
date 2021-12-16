@@ -33,12 +33,12 @@ def infer_from_file(
         noise_schedule_steps: int = 100) -> None:
     model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
     alphas = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
-    image = tf.cast(tf.io.decode_jpeg(tf.io.read_file(src)), tf.float32)
+    image = tf.image.convert_image_dtype(tf.io.decode_jpeg(tf.io.read_file(src)), tf.float32)
     h, w, c = image.shape
     image = tf.expand_dims(image, 0)
     image = tf.image.resize(image, (h * 8, w * 8), method=ResizeMethod.NEAREST_NEIGHBOR)
     result_img = tf.squeeze(infer(model, image, alphas))
-    result_img = tf.cast(result_img, tf.uint8)
+    result_img = tf.image.convert_image_dtype(result_img, tf.uint8)
     tf.io.write_file(dest, tf.io.encode_jpeg(result_img))
     return
 
