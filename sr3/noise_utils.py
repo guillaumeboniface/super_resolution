@@ -45,13 +45,13 @@ def noise_schedule(schedule_name: str, start: float, end: float, n_timesteps: in
     else:
         return alphas
 
-def generate_noisy_image(image: tf.Tensor, std_param: tf.float32) -> tf.Tensor:
-    return tf.math.sqrt(std_param) * image + tf.math.sqrt(1 - std_param) * tf.random.normal(image.shape, stddev=1.)
+def generate_noisy_image(image: tf.Tensor, noise_param: tf.float32) -> tf.Tensor:
+    return tf.math.sqrt(noise_param) * image + tf.math.sqrt(1 - noise_param) * tf.random.normal(image.shape, stddev=1.)
 
-def generate_noisy_image_batch(image: tf.Tensor, std_param: tf.float32) -> Iterable:
-    std_param = tf.reshape(std_param, [std_param.shape[0], 1, 1, 1])
+def generate_noisy_image_batch(image: tf.Tensor, noise_param: tf.float32) -> Iterable:
+    noise_param = tf.reshape(noise_param, [noise_param.shape[0], 1, 1, 1])
     noise = tf.random.normal(image.shape, stddev=1.)
-    return tf.math.sqrt(std_param) * image + tf.math.sqrt(1 - std_param) * noise, noise
+    return tf.math.sqrt(noise_param) * image + tf.math.sqrt(1 - noise_param) * noise, noise
 
 def generate_noisy_image_minus_one_batch(
     image: tf.Tensor,
