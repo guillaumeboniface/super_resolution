@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 from collections.abc import Iterable
 
 def upsample(x: tf.Tensor, use_conv: bool = False) -> tf.Tensor:
@@ -24,6 +25,8 @@ def attention_block(x: tf.Tensor) -> tf.Tensor:
     Implementing self-attention block, as mentioned in
     https://arxiv.org/pdf/1809.11096.pdf
     """
+
+    x = tfa.layers.GroupNormalization(groups=32, axis=3)(x)
 
     q = AttentionVectorLayer()(x)
     v = AttentionVectorLayer()(x)

@@ -1,7 +1,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-REQUIRED_PACKAGES = ["fire"]
+REQUIRED_PACKAGES = ["fire", "tensorflow-addons"]
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
