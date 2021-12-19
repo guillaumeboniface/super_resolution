@@ -27,7 +27,7 @@ def train(
     attention_resolution: Iterable = (8,),
     num_resblock: int = 3,
     use_deep_blocks: bool = False,
-    resample_with_conv: bool = False,
+    resample_with_conv: bool = True,
     use_tpu: bool = True,
     tpu_steps_per_execution: int = None,
     resume_model: str = None) -> None:
