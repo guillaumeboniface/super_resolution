@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_addons as tfa
 from collections.abc import Iterable
 
 def upsample(x: tf.Tensor, use_conv: bool = False) -> tf.Tensor:
@@ -20,13 +19,15 @@ def downsample(x: tf.Tensor, use_conv: bool = False):
     assert(x.shape == [batch_size, height // 2, width // 2, channels])
     return x
 
-def attention_block(x: tf.Tensor) -> tf.Tensor:
+def attention_block(inputs: Iterable) -> tf.Tensor:
     """
     Implementing self-attention block, as mentioned in
     https://arxiv.org/pdf/1809.11096.pdf
     """
 
-    x = tfa.layers.GroupNormalization(groups=32, axis=3)(x)
+    x, noise_emb = inputs
+
+    x = ConditionalInstanceNormalization()([x, noise_emb])
 
     q = AttentionVectorLayer()(x)
     v = AttentionVectorLayer()(x)

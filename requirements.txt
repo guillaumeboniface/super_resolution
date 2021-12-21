@@ -1,6 +1,5 @@
 fire
 tensorflow
-tensorflow-addons
 google-cloud-storage
 google-api-python-client
 tqdm

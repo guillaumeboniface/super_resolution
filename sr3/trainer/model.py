@@ -45,21 +45,21 @@ def create_model(
         for j in range(num_resblock):
             x = block(x, noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = components.attention_block(x)
+                x = components.attention_block([x, noise_level_embedding])
             skip_connections.append(x)
         if i != num_resolutions - 1:
             x = components.downsample(x, use_conv=resample_with_conv)
             skip_connections.append(x)
 
     x = block(x, noise_level_embedding, dropout=dropout)
-    x = components.attention_block(x)
+    x = components.attention_block([x, noise_level_embedding])
     x = block(x, noise_level_embedding, dropout=dropout)
 
     for i, multiplier in reversed(list(enumerate(channel_ramp_multiplier))):
         for j in range(num_resblock + 1):
             x = upblock(x, skip_connections.pop(), noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = components.attention_block(x)
+                x = components.attention_block([x, noise_level_embedding])
         if i != 0:
             x = components.upsample(x, use_conv=resample_with_conv)
 
