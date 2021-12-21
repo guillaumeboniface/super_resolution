@@ -65,7 +65,7 @@ def train(
                 resample_with_conv=resample_with_conv)
             model.compile(optimizer=utils.warmup_adam_optimizer(learning_rate, learning_warmup_steps),
                 steps_per_execution=steps_per_execution,
-                loss=tf.keras.losses.MeanSquaredError())
+                loss=tf.keras.losses.MeanAbsoluteError())
             config = saved_args
         utils.write_string_to_file(os.path.join(job_dir, 'run_config.json'), json.dumps(config, indent=4))
         
