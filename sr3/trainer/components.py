@@ -108,7 +108,7 @@ def up_resblock(x: tf.Tensor, skip_x: tf.Tensor, noise_embedding: tf.Tensor, n_o
     if not n_out_channels:
         n_out_channels = x.shape[-1]
 
-    skip_x = skip_x * 1 / tf.math.sqrt(2.)
+    skip_x = skip_x / tf.math.sqrt(2.)
     x = tf.keras.layers.Concatenate(axis=-1)([x, skip_x])
     
     return resblock(x, noise_embedding, n_out_channels=n_out_channels, dropout=dropout)
