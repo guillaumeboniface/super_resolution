@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 from sr3.utils import WarmUpSchedule
 import sr3.trainer.components as components 
 from collections.abc import Iterable
@@ -45,27 +46,27 @@ def create_model(
         for j in range(num_resblock):
             x = block(x, noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = components.attention_block([x, noise_level_embedding])
+                x = components.attention_block(x)
             skip_connections.append(x)
         if i != num_resolutions - 1:
             x = components.downsample(x, use_conv=resample_with_conv)
             skip_connections.append(x)
 
     x = block(x, noise_level_embedding, dropout=dropout)
-    x = components.attention_block([x, noise_level_embedding])
+    x = components.attention_block(x)
     x = block(x, noise_level_embedding, dropout=dropout)
 
     for i, multiplier in reversed(list(enumerate(channel_ramp_multiplier))):
         for j in range(num_resblock + 1):
             x = upblock(x, skip_connections.pop(), noise_level_embedding, channel_dim * multiplier, dropout=dropout)
             if x.shape[1] in attention_resolution:
-                x = components.attention_block([x, noise_level_embedding])
+                x = components.attention_block(x)
         if i != 0:
             x = components.upsample(x, use_conv=resample_with_conv)
 
     assert(len(skip_connections) == 0)
 
-    x = components.ConditionalInstanceNormalization()([x, noise_level_embedding])
+    x = tfa.layers.GroupNormalization(groups=32, axis=-1)(x)
     x = tf.keras.activations.swish(x)
     outputs = tf.keras.layers.Conv2D(out_channels, 3, padding='same')(x)
 

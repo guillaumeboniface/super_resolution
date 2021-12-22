@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 from collections.abc import Iterable
 
 def upsample(x: tf.Tensor, use_conv: bool = False) -> tf.Tensor:
@@ -18,15 +19,13 @@ def downsample(x: tf.Tensor, use_conv: bool = False):
     assert(x.shape == [batch_size, height // 2, width // 2, channels])
     return x
 
-def attention_block(inputs: Iterable) -> tf.Tensor:
+def attention_block(x: tf.Tensor) -> tf.Tensor:
     """
     Implementing self-attention block, as mentioned in
     https://arxiv.org/pdf/1809.11096.pdf
     """
 
-    x, noise_emb = inputs
-
-    x = ConditionalInstanceNormalization()([x, noise_emb])
+    x = tfa.layers.GroupNormalization(groups=32, axis=-1)(x)
 
     q = AttentionVectorLayer()(x)
     v = AttentionVectorLayer()(x)
@@ -51,14 +50,14 @@ def deep_resblock(
 
     track_a = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(x)
 
-    track_b = ConditionalInstanceNormalization()([x, noise_embedding])
+    track_b = tfa.layers.GroupNormalization(groups=32, axis=-1)(x)
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(track_b)
     track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
     track_b = tf.keras.layers.Dropout(dropout)(track_b)
-    track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
+    track_b = tfa.layers.GroupNormalization(groups=32, axis=-1)(x)
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
     track_b = ConditionalInstanceNormalization()([track_b, noise_embedding])
@@ -82,7 +81,7 @@ def resblock(
 
     track_a = tf.keras.layers.Conv2D(n_out_channels, 1, padding='same')(x)
 
-    track_b = ConditionalInstanceNormalization()([x, noise_embedding])
+    track_b = tfa.layers.GroupNormalization(groups=32, axis=-1)(x)
     track_b = tf.keras.activations.swish(track_b)
     track_b = tf.keras.layers.Conv2D(n_out_channels, 3, padding='same')(track_b)
     track_b = tf.keras.layers.Dropout(dropout)(track_b)
