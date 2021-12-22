@@ -11,19 +11,23 @@ def warmup_adam_optimizer(learning_rate: float, warmup_steps: int = 10000) -> tf
 
 class WarmUpSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
-    def __init__(self, target_learning_rate: float, warmup_steps: int, **kwargs) -> None:
+    def __init__(self, target_learning_rate: float, warmup_steps: int, prev_step: int = 0, **kwargs) -> None:
         super(WarmUpSchedule, self).__init__(**kwargs)
         self.target_learning_rate = target_learning_rate
         self.warmup_steps = warmup_steps
+        self.init_step = prev_step
+        self.prev_step = self.init_step
 
     def __call__(self, step: int) -> tf.float32:
-        warmup = tf.cast(step, tf.float32) / tf.cast(self.warmup_steps, tf.float32) * self.target_learning_rate
+        warmup = tf.cast(step + self.init_step, tf.float32) / tf.cast(self.warmup_steps, tf.float32) * self.target_learning_rate
+        self.prev_step = self.init_step + step
         return tf.math.minimum(self.target_learning_rate, warmup)
 
     def get_config(self) -> dict:
         config = {
             'target_learning_rate': self.target_learning_rate,
-            'warmup_steps': self.warmup_steps
+            'warmup_steps': self.warmup_steps,
+            'prev_step': self.prev_step
         }
         return config
 
