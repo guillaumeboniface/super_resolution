@@ -4,10 +4,9 @@ from collections.abc import Iterable
 def upsample(x: tf.Tensor, use_conv: bool = False) -> tf.Tensor:
     batch_size, height, width, channels = x.shape
     x = tf.keras.layers.UpSampling2D(interpolation='nearest')(x)
-    assert(x.shape == [batch_size, height * 2, width * 2, channels])
     if use_conv:
         x = tf.keras.layers.Conv2D(channels, 3, padding='same')(x)
-        assert(x.shape == [batch_size, height * 2, width * 2, channels])
+    assert(x.shape == [batch_size, height * 2, width * 2, channels])
     return x
 
 def downsample(x: tf.Tensor, use_conv: bool = False):
@@ -171,7 +170,9 @@ class ConditionalInstanceNormalization(tf.keras.layers.Layer):
             name='conditional_w1'
         )
         self.b = self.add_weight(
-            shape=(self.embedding_dim, self.n_channels), initializer="zero", trainable=True,
+            shape=(self.embedding_dim, self.n_channels),
+            initializer="zero",
+            trainable=True,
             name='conditional_b'
         )
         self.w2 = self.add_weight(
