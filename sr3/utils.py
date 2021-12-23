@@ -27,7 +27,7 @@ class WarmUpSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         config = {
             'target_learning_rate': self.target_learning_rate,
             'warmup_steps': self.warmup_steps,
-            'prev_step': self.prev_step
+            'prev_step': self.prev_step.numpy()
         }
         return config
 
