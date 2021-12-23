@@ -39,11 +39,12 @@ def dummy_train_run(tfr_folder, job_dir) -> None:
     train(tfr_folder, job_dir,
         train_epochs=3,
         use_tpu=False,
-        channel_dim=16,
+        channel_dim=32,
         channel_ramp_multiplier=(1, 2),
         num_resblock=1,
-        epoch_factor=0.01041666666,
-        batch_size=16
+        epoch_factor=0.001041666666,
+        batch_size=16,
+        valid_steps=1
         )
 
 def downscale_img(src: str, dest: str, factor: int) -> None:

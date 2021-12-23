@@ -15,6 +15,7 @@ def train(
     valid_ratio: float = 0.1,
     train_epochs: int = 420,
     epoch_factor: int = 1,
+    valid_steps: int = None,
     learning_rate: float = 1e-4,
     learning_warmup_steps: int = 10000,
     dropout: float = 0.2,
@@ -83,7 +84,10 @@ def train(
         histogram_freq=120)
     
     steps_per_epoch = n_train_images // batch_size
-    validation_steps = n_valid_images // batch_size
+    if valid_steps:
+        validation_steps = valid_steps
+    else:
+        validation_steps = n_valid_images // batch_size
     
     model.fit(
         train_ds,
