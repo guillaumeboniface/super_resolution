@@ -58,7 +58,8 @@ def generate_noisy_image_minus_one_batch(
     image_t: tf.Tensor,
     gamma: tf.float32,
     gamma_minus_one: tf.float32,
-    alpha: tf.float32) -> tf.Tensor:
+    alpha: tf.float32,
+    t: int) -> tf.Tensor:
     """
     Calculating image at t - 1 knowing the noise distribution,
     the image at t_zero and the image at t. For the original formula
@@ -70,19 +71,20 @@ def generate_noisy_image_minus_one_batch(
     mu = tf.math.sqrt(gamma_minus_one) * (1 - alpha) / (1 - gamma) * image_t0 + \
             tf.math.sqrt(alpha) * (1 - gamma_minus_one) / (1 - gamma) * image_t
     sigma = tf.math.log(tf.maximum((1 - gamma_minus_one) * (1 - alpha) / (1 - gamma), 1e20))
-    z = tf.random.normal(image_t0.shape, stddev=1.) if gamma_minus_one < 1. else tf.zeros(image_t0.shape)
-    return mu + tf.random.normal(image_t0.shape, stddev=1.) * tf.math.exp(0.5 * sigma)
+    mask = tf.reshape(tf.not_equal(t, 0), [gamma.shape[0], 1, 1, 1])
+    return mu + mask * tf.random.normal(image_t0.shape, stddev=1.) * tf.math.exp(0.5 * sigma)
 
 def generate_image_minus_one(
     image_t: tf.Tensor,
     predicted_noise: tf.Tensor,
     gamma: tf.Tensor,
     gamma_minus_one: tf.Tensor,
-    alpha: tf.Tensor) -> tf.Tensor:
+    alpha: tf.Tensor,
+    t: int) -> tf.Tensor:
 
     img_start_guess = predict_start_img(image_t, predicted_noise, gamma)
     img_start_guess = tf.clip_by_value(img_start_guess, -1., 1.)
-    image_t_minus_one = generate_noisy_image_minus_one_batch(img_start_guess, image_t, gamma, gamma_minus_one, alpha)
+    image_t_minus_one = generate_noisy_image_minus_one_batch(img_start_guess, image_t, gamma, gamma_minus_one, alpha, t)
 
     return image_t_minus_one
 
