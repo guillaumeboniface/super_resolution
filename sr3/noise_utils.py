@@ -71,7 +71,7 @@ def generate_noisy_image_minus_one_batch(
     mu = tf.math.sqrt(gamma_minus_one) * (1 - alpha) / (1 - gamma) * image_t0 + \
             tf.math.sqrt(alpha) * (1 - gamma_minus_one) / (1 - gamma) * image_t
     sigma = tf.math.log(tf.maximum((1 - gamma_minus_one) * (1 - alpha) / (1 - gamma), 1e20))
-    mask = tf.reshape(tf.not_equal(t, 0), [gamma.shape[0], 1, 1, 1])
+    mask = tf.cast(tf.reshape(tf.not_equal(t, 0), [gamma.shape[0], 1, 1, 1]), tf.float32)
     return mu + mask * tf.random.normal(image_t0.shape, stddev=1.) * tf.math.exp(0.5 * sigma)
 
 def generate_image_minus_one(
