@@ -18,9 +18,9 @@ def sample_noise_schedule(alpha_schedule: tf.Tensor, batch_size: int) -> Iterabl
     return tf.cast(alpha, tf.float32), tf.cast(gamma, tf.float32)
 
 def _warmup_alpha(start: float, end: float, n_timesteps: int, warmup_fraction: float) -> tf.Tensor:
-    alphas = end * tf.ones(n_timesteps, dtype=tf.float64)
     warmup_time = int(n_timesteps * warmup_fraction)
-    alphas[:warmup_time] = tf.linspace(start, end, warmup_time)
+    plateau = end * tf.ones(n_timesteps - warmup_time, dtype=tf.float64)
+    alphas = tf.concat([tf.linspace(start, end, warmup_time), plateau])
     return alphas
 
 def noise_schedule(schedule_name: str, start: float, end: float, n_timesteps: int, gammas: bool = False) -> tf.Tensor:
