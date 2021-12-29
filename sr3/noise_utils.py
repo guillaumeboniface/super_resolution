@@ -37,6 +37,8 @@ def noise_schedule(schedule_name: str, start: float, end: float, n_timesteps: in
         alphas = _warmup_alpha(start, end, n_timesteps, 0.5)
     elif schedule_name == 'const':
         alphas = end * tf.ones(n_timesteps, dtype=tf.float64)
+    elif schedule_name == 'jsd':
+        alphas = 1. / tf.linspace(tf.cast(n_timesteps, tf.float64), tf.cast(1, tf.float64), n_timesteps)
     else:
         raise NotImplementedError(schedule_name)
     assert alphas.shape == (n_timesteps,)
