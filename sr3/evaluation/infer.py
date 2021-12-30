@@ -2,7 +2,7 @@ import tensorflow as tf
 from collections.abc import Iterable
 
 from tensorflow.python.ops.image_ops_impl import ResizeMethod
-from sr3.noise_utils import noise_schedule
+from sr3.noise_utils import noise_schedule, generate_noisy_image_batch
 from sr3.dataset import IMAGE_SHAPE
 from sr3.trainer.model import custom_objects
 import fire
@@ -14,7 +14,7 @@ def infer(model: tf.keras.models.Model, images: tf.Tensor, alpha_noise_schedule:
     gammas = tf.reverse(gammas, (0,))
     batch_size = images.shape[0]
     context_images = images
-    target_images = tf.random.normal(context_images.shape, stddev=1.)
+    target_images, noise = generate_noisy_image_batch(images, gammas[:1])
     for i in range(alphas.shape[0]):
         gamma_b = tf.broadcast_to(tf.reshape(gammas[i], (batch_size, 1, 1, 1)), (batch_size,) + IMAGE_SHAPE)
         input = tf.stack([context_images, target_images, gamma_b], axis=1)
@@ -27,9 +27,9 @@ def infer_from_file(
         model_path: str,
         src: str,
         dest: str,
-        noise_schedule_shape: str = 'quad',
-        noise_schedule_start: float = 1.,
-        noise_schedule_end: float = 0.95,
+        noise_schedule_shape: str = 'linear',
+        noise_schedule_start: float = 0.9999999,
+        noise_schedule_end: float = 0.9,
         noise_schedule_steps: int = 100) -> None:
     model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
     alphas = noise_schedule(noise_schedule_shape, noise_schedule_start, noise_schedule_end, noise_schedule_steps)
