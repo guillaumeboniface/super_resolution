@@ -1,5 +1,5 @@
 # Reproducing the Image Super-Resolution via Iterative Refinement paper
-This repository focuses on partially reproducing the results of the [Image Super-Resolution via Iterate Refinement paper](https://iterative-refinement.github.io/). It focuses solely on the celebaHQ dataset and the 16x16 -> 128x128 task.
+This repository focuses on partially reproducing the results of the [Image Super-Resolution via Iterate Refinement paper](https://iterative-refinement.github.io/). It uses only the celebaHQ dataset and the 16x16 -> 128x128 task.
 
 The repository is based on the model and methodology description from the paper. In some places though, details are lacking and guesses had to be made. What you can expect:
 - The overall Unet architecture reproduces the implementation from [Denoising Diffusion Probabilistic Model](https://hojonathanho.github.io/diffusion/), something that was made easier from being able to access [their own paper implementation](https://github.com/hojonathanho/diffusion). It includes attention layers at lower resolutions and residual connections.
